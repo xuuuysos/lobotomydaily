@@ -1,6 +1,5 @@
-from django.contrib.auth.forms import UserCreationForm
-from django import forms
+import django.contrib.auth.forms as f
 
-class RegisterForm(UserCreationForm):
-    username = forms.UsernameField(label="username")
-    password = forms.UsernameField(label="password")
+class RegisterForm(f.UserCreationForm):
+    username = f.forms.CharField(label="username")
+    password = f.forms.CharField(label="password")
