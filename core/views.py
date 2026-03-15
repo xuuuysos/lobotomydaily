@@ -38,5 +38,8 @@ def profile(request):
     context.update(get_general_context(request))
     return render(request, "profile.html", context)
 
+from .models import News
+
 def index(request):
-    return render(request, 'core/index.html')
+    news_list = News.objects.all().order_by('-id')[:5]
+    return render(request, 'core/index.html', {'news_list': news_list})

@@ -1,27 +1,73 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lobotomy News</title>
+    <title>LobotomyDaily</title>
+    <!-- Importing Inter font for standard text block -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}">
 </head>
 <body>
-    <nav>
-        <header>
-            <a href="/">LobotomyDaily</a>
-            <form>
-                <input type="search" placeholder="Search">
-                <button type="submit">🔍</button>
-            </form>
-            <a href="{% url 'register' %}">Log in →</a>
-        </header>
-        <div>
-            <a href="#">Trends</a>
-            <a href="#">Collections</a>
-            <a href="#">Subscribes</a>
-            <a href="#">Rubrics ▼</a>
+    <header>
+        <a href="/" class="logo-section">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 0 0-7.39 16.7l.54 1.3A2 2 0 0 0 7 21h10a2 2 0 0 0 1.85-1.02l.53-1.28A10 10 0 0 0 12 2z"></path>
+                <path d="M12 2C8.686 2 6 5.58 6 10c0 4.418 2.686 8 6 8s6-3.582 6-8c0-4.42-2.686-8-6-8z"></path>
+            </svg>
+            <span class="logo-text">LobotomyDaily</span>
+        </a>
+        <form class="search-bar">
+            <input type="search" placeholder="Search">
+            <button type="submit">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </form>
+        <a href="{% url 'register' %}" class="login-btn">
+            Log in 
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+        </a>
+    </header>
+    
+    <nav class="sub-nav">
+        <div class="sub-nav-inner">
+            <div class="sub-nav-links">
+                <a href="#">Trends</a>
+                <a href="#">Collections</a>
+                <a href="#">Subscribes</a>
+            </div>
+            <div class="rubrics">
+                Rubrics 
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
         </div>
     </nav>
-    <h1>Lobotomy News</h1>
+
+    <main class="news-container">
+        {% for article in news_list %}
+            <a href="{{ article.url }}" class="news-card {% if forloop.counter == 5 %}wide{% endif %}">
+                <div class="news-source">{{ article.source }}</div>
+                <h2 class="news-title">{{ article.title }}</h2>
+                <div class="news-body">{{ article.body|truncatechars:300 }}</div>
+            </a>
+        {% empty %}
+            <!-- Placeholders matching the exact design if DB is empty -->
+            <div class="news-card"></div>
+            <div class="news-card"></div>
+            <div class="news-card"></div>
+            <div class="news-card"></div>
+            <div class="news-card wide"></div>
+        {% endfor %}
+    </main>
 </body>
 </html>
