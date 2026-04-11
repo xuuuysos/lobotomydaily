@@ -39,7 +39,28 @@ def profile(request):
     return render(request, "profile.html", context)
 
 from .models import News
+from django.utils import timezone
+import datetime
 
 def index(request):
-    news_list = News.objects.all().order_by('-id')[:5]
-    return render(request, 'core/index.html', {'news_list': news_list})
+    now = timezone.localtime()
+    start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    days_data = []
+    
+    for i in range(7):
+        target_start = start_of_today - datetime.timedelta(days=i)
+        target_end = target_start + datetime.timedelta(days=1)
+        
+        daily_news = News.objects.filter(
+            parsed_at__gte=target_start,
+            parsed_at__lt=target_end
+        ).order_by('-parsed_at')
+        
+        days_data.append({
+            'date': target_start,
+            'news_list': daily_news,
+            'is_today': i == 0
+        })
+
+    return render(request, 'core/index.html', {'days_data': days_data})
