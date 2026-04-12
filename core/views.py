@@ -40,7 +40,7 @@ def profile(request):
     context.update(get_general_context(request))
     return render(request, "profile.html", context)
 
-from .models import News
+from .models import News, Comment
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -74,9 +74,6 @@ def index(request):
     return render(request, 'core/index.html', {'days_data': days_data})
 
 
-# ── Category → URL path prefixes on lenta.ru/YYYY/MM/DD/ ─────────────────────
-# The date archive page (lenta.ru/YYYY/MM/DD/) has proper article HTML with
-# reliable titles. We filter links by URL prefix to get category-specific ones.
 LENTA_SECTION_PATHS = {
     'Политика':   ['russia', 'world', 'ussr'],
     'Спорт':      ['sport'],
@@ -99,8 +96,6 @@ def _fetch_html(url):
     except Exception:
         return ''
 
-
-# Per-request cache so we don't re-fetch the same date page for each category
 _date_html_cache = {}
 
 def _get_date_archive_html(date_obj):
@@ -132,11 +127,8 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
     for a in soup.find_all('a', href=True):
         href = a['href']
 
-        # Must contain the date segment
         if date_seg not in href:
             continue
-
-        # Check if the URL path belongs to one of the category sections
         href_lower = href.lower()
         in_section_url = any(f'/{p}/' in href_lower for p in section_paths)
 
@@ -144,18 +136,16 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
         if full_url in seen:
             continue
 
-        # Extract title first to check keywords
         title_node = a.find(class_=re.compile(r'title'))
         raw = title_node.get_text(separator=' ') if title_node else a.get_text(separator=' ')
         title = re.sub(r'\s+', ' ', raw).strip()
         title = re.sub(r'\d{2}:\d{2}.*$', '', title).strip()
 
-        # Filtering logic:
-        # 1. Skip if title is obviously not a news headline
+
         if not title or len(title) < 20 or len(title.split()) < 3:
             continue
 
-        # 2. Check if it matches the rubric by URL OR by keywords in Title
+
         title_lower = title.lower()
         matches_keywords = any(kw in title_lower for kw in keywords)
 
@@ -164,7 +154,6 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
 
         seen.add(full_url)
 
-        # Time extraction
         time_str = ''
         time_node = a.find('time') or a.find(class_=re.compile(r'date|time'))
         if time_node:
@@ -178,7 +167,7 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
             'time': time_str or f'{d:02d}.{m:02d}',
         })
 
-        if len(articles) >= 20: # Slightly more per rubric
+        if len(articles) >= 20:
             break
 
     return articles
@@ -192,7 +181,7 @@ def _extract_article_body(url):
     soup = BeautifulSoup(html, 'lxml')
     blocks = []
 
-    # Lenta-specific containers
+
     body_div = soup.find('div', class_=re.compile(r'topic-body__content|article-text|b-text|content__text'))
     if body_div:
         for p in body_div.find_all('p'):
@@ -200,7 +189,7 @@ def _extract_article_body(url):
             if t:
                 blocks.append(t)
 
-    # Generic article fallback
+
     if not blocks:
         article = soup.find('article')
         if article:
@@ -209,7 +198,7 @@ def _extract_article_body(url):
                 if len(t) > 40:
                     blocks.append(t)
 
-    # Last resort: all long paragraphs
+
     if not blocks:
         for p in soup.find_all('p'):
             t = re.sub(r'\s+', ' ', p.get_text(separator=' ')).strip()
@@ -245,7 +234,7 @@ def fetch_category_news(request):
     except Exception:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    category_data = body.get('categoryData', []) # [{label, keywords}, ...]
+    category_data = body.get('categoryData', []) 
     date_strs  = body.get('dates', [])
 
     results = {}
@@ -277,3 +266,57 @@ def fetch_category_news(request):
 
     return JsonResponse({'results': results})
 
+@csrf_exempt
+def get_comments(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    
+    url = body.get('url', '').strip()
+    if not url:
+        return JsonResponse({'error': 'No URL provided'}, status=400)
+
+    comments = Comment.objects.filter(news_url=url).select_related('author')
+    data = []
+    for c in comments:
+        data.append({
+            'author': c.author.username,
+            'text': c.text,
+            'created_at': c.created_at.strftime('%d.%m.%Y %H:%M')
+        })
+    return JsonResponse({'comments': data})
+
+@csrf_exempt
+def add_comment(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Not authenticated'}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    
+    url = body.get('url', '').strip()
+    text = body.get('text', '').strip()
+    
+    if not url or not text:
+        return JsonResponse({'error': 'URL and text are required'}, status=400)
+
+    comment = Comment.objects.create(
+        news_url=url,
+        author=request.user,
+        text=text
+    )
+
+    return JsonResponse({
+        'comment': {
+            'author': comment.author.username,
+            'text': comment.text,
+            'created_at': comment.created_at.strftime('%d.%m.%Y %H:%M')
+        }
+    })
