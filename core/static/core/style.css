@@ -361,7 +361,7 @@ body {
 .day-widget .list-items {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease;
+    transition: max-height 0.35s ease;
 }
 .day-widget.open .list-items {
     max-height: 2000px;
@@ -375,7 +375,7 @@ body {
     background-color: #f9f9f9;
 }
 .chevron-icon {
-    transition: transform 0.3s;
+    transition: transform 0.35s ease;
 }
 .day-widget.open .chevron-icon {
     transform: rotate(180deg);

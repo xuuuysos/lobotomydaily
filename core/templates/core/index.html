@@ -9,12 +9,199 @@
     <link rel="stylesheet" href="{% static 'core/style.css' %}?v=2">
     <style>
         .date-header span {
-            transition: font-size 0.3s ease, color 0.3s ease;
+            transition: font-size 0.35s ease, color 0.35s ease;
         }
         .day-widget.open .date-header span {
             font-weight: bold;
             font-size: 16px;
             color: #111;
+        }
+
+        /* Categories slide panel */
+        #tema-btn {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #tema-btn.active {
+            background-color: #1a2b88;
+            color: #fff;
+        }
+        #tema-btn.active svg { stroke: rgba(255,255,255,0.7); }
+
+        .categories-panel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            max-width: 0;
+            opacity: 0;
+            transition: max-width 0.35s ease, opacity 0.25s ease;
+            white-space: nowrap;
+        }
+        .categories-panel.open {
+            max-width: 900px;
+            opacity: 1;
+        }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a2b88;
+            background-color: #ebf0fe;
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
+            flex-shrink: 0;
+        }
+        .cat-chip:hover {
+            background-color: #d4ddfb;
+            transform: translateY(-1px);
+        }
+        .cat-chip.selected {
+            background-color: #1a2b88;
+            color: #fff;
+            border-color: #1a2b88;
+        }
+        .cat-chip svg { flex-shrink: 0; }
+
+        /* ── Category Feed ─────────────────────────── */
+        #category-feed {
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-grow: 1;
+            animation: feedIn 0.3s ease;
+        }
+        @keyframes feedIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #category-feed.visible { display: flex; }
+
+        .feed-header {
+            padding: 16px 30px 12px;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 2;
+        }
+        .feed-header-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a2b88;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .feed-count {
+            font-size: 11px;
+            color: #a0a0a0;
+        }
+
+        .feed-date-sep {
+            padding: 10px 30px 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #a0a0a0;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eaeaea;
+            position: sticky;
+            top: 45px;
+            z-index: 1;
+        }
+
+        .feed-item {
+            padding: 14px 30px;
+            border-bottom: 1px solid #eaeaea;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .feed-item:hover { background-color: #f5f7ff; }
+        .feed-item.active { background-color: #ebf0fe; }
+
+        .feed-item-time {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a2b88;
+            min-width: 36px;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+        .feed-item-body {}
+        .feed-item-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #111;
+            line-height: 1.4;
+        }
+        .feed-item-source {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-top: 3px;
+        }
+
+        .feed-loading {
+            padding: 40px 30px;
+            text-align: center;
+            color: #a0a0a0;
+            font-size: 13px;
+        }
+        .feed-loading svg {
+            animation: spin 1s linear infinite;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .feed-empty {
+            padding: 40px 30px;
+            text-align: center;
+            color: #bbb;
+            font-size: 13px;
+        }
+
+        /* ── List section header "Актуальное" ─── */
+        .list-section-header {
+            padding: 18px 30px 14px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            border-bottom: 2px solid #eaeaea;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 3;
+        }
+        .list-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111;
+            letter-spacing: -0.3px;
+        }
+        .list-section-sub {
+            font-size: 12px;
+            color: #a0a0a0;
+            font-weight: 400;
+        }
+        /* Hide widgets-header when feed is active */
+        #category-feed.visible ~ * .list-section-header,
+        .list-column:has(#category-feed.visible) #widgets-header {
+            display: none;
         }
     </style>
 </head>
@@ -96,17 +283,50 @@
 
         <main class="main-area">
             <header class="topbar">
-                <div class="search-area">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="search-area" style="flex-grow:1;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <div class="search-tag">
-                        TEMA
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                    <div id="tema-btn" class="search-tag" onclick="toggleCategories()">
+                        ТЕМА
+                        <svg id="tema-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s ease;">
+                            <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
+                    </div>
+                    <div class="categories-panel" id="categories-panel">
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="политик,партия,президент,правительство,депутат,парламент,министр,закон,kremlin,путин,госдума,выборы,сенат,совет">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            Политика
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="спорт,футбол,хоккей,баскетбол,теннис,олимпи,чемпионат,матч,игрок,тренер,клуб,сборная,турнир,гол,атлет">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                            Спорт
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="экономик,рубль,доллар,биржа,банк,инфляци,ввп,торговл,бизнес,рынок,акци,компани,финанс,бюджет,налог">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            Экономика
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="технолог,искусственный интеллект,ии,робот,компьютер,интернет,цифр,смартфон,программ,разработ,it,ит,данные,алгоритм">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            Технологии
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="культур,музык,кино,театр,выставк,искусств,фильм,спектакль,концерт,художник,режиссёр,литератур,книг">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                            Культура
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="наук,учен,исследован,открыти,физик,химик,биолог,астроном,космос,эксперимент,лаборатор">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            Наука
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="общество,социальн,образован,школ,студент,молодёж,женщин,семь,дет,граждан,право,трудов">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Общество
+                        </div>
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="регион,область,край,республик,губернатор,город,район,москв,петербург,мэр,муниципал">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            Регионы
+                        </div>
                     </div>
                 </div>
                 <div class="topbar-actions">
@@ -128,8 +348,15 @@
             
             <div class="content-columns">
                 <section class="list-column">
+
+                    <!-- Header: shown in default mode -->
+                    <div class="list-section-header" id="widgets-header">
+                        <span class="list-section-title">Актуальное</span>
+                        <span class="list-section-sub">за 7 дней</span>
+                    </div>
+
                     {% for day in days_data %}
-                    <div class="day-widget {% if forloop.first %}open{% endif %}">
+                    <div class="day-widget {% if forloop.first %}open{% endif %}" data-date="{{ day.date|date:'Y-m-d' }}">
                         <div class="date-header" onclick="toggleWidget(this)">
                             <span>{{ day.date|date:"j E Y"|lower }}</span>
                             <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -153,6 +380,16 @@
                         </div>
                     </div>
                     {% endfor %}
+
+                    <!-- Category feed (shown instead of widgets when a theme is selected) -->
+                    <div id="category-feed">
+                        <div class="feed-header">
+                            <span class="feed-header-title" id="feed-title">Лента</span>
+                            <span class="feed-count" id="feed-count"></span>
+                        </div>
+                        <div id="feed-body"></div>
+                    </div>
+
                 </section>
                 
                 <section class="reading-column">
@@ -179,6 +416,194 @@
         </main>
     </div>
     <script>
+        function toggleCategories() {
+            const btn = document.getElementById('tema-btn');
+            const panel = document.getElementById('categories-panel');
+            const arrow = document.getElementById('tema-arrow');
+            const isOpen = panel.classList.contains('open');
+            panel.classList.toggle('open');
+            btn.classList.toggle('active', !isOpen);
+            arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+        }
+
+        function selectCat(chip) {
+            chip.classList.toggle('selected');
+            applyFilter();
+        }
+
+        // Collect ISO dates from day-widgets
+        function getWidgetDates() {
+            const dates = [];
+            document.querySelectorAll('.day-widget[data-date]').forEach(w => {
+                dates.push(w.dataset.date);
+            });
+            return dates;
+        }
+
+        function applyFilter() {
+            const selectedChips = document.querySelectorAll('.cat-chip.selected');
+            const widgets = document.querySelectorAll('.day-widget');
+            const feed = document.getElementById('category-feed');
+
+            if (selectedChips.length === 0) {
+                // Restore widgets, hide feed
+                widgets.forEach(w => { w.style.display = ''; });
+                document.querySelectorAll('.list-item').forEach(el => { el.style.display = ''; });
+                feed.classList.remove('visible');
+                document.getElementById('widgets-header').style.display = '';
+                return;
+            }
+
+            // Switch to feed mode: hide widgets and header, show feed
+            widgets.forEach(w => { w.style.display = 'none'; });
+            document.getElementById('widgets-header').style.display = 'none';
+            feed.classList.add('visible');
+
+            // Collect selected categories and their keywords
+            const categoryData = [];
+            selectedChips.forEach(chip => {
+                const label = chip.textContent.trim();
+                const keywords = (chip.dataset.keywords || '').split(',').map(k => k.trim().toLowerCase());
+                if (label) {
+                    categoryData.push({ label, keywords });
+                }
+            });
+
+            // Update header title
+            document.getElementById('feed-title').textContent = categoryData.map(c => c.label).join(' · ');
+            document.getElementById('feed-count').textContent = '';
+
+            // Show loader
+            const feedBody = document.getElementById('feed-body');
+            feedBody.innerHTML = `
+                <div class="feed-loading">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2b88" stroke-width="2.5">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    Загружаем новости…
+                </div>`;
+
+            const dates = getWidgetDates();
+
+            fetch('/api/category-news/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryData, dates })
+            })
+            .then(r => r.json())
+            .then(data => {
+                renderFeed(data.results || {}, dates);
+            })
+            .catch(() => {
+                feedBody.innerHTML = '<div class="feed-empty">Не удалось загрузить новости. Проверьте соединение.</div>';
+            });
+        }
+
+        const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        function formatDate(dateStr) {
+            // dateStr = 'YYYY-MM-DD'
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const today = new Date();
+            const isToday = today.getFullYear()===y && today.getMonth()+1===m && today.getDate()===d;
+            const isYesterday = new Date(today - 86400000).getDate()===d &&
+                                new Date(today - 86400000).getMonth()+1===m;
+            if (isToday) return 'Сегодня';
+            if (isYesterday) return 'Вчера';
+            return `${d} ${RU_MONTHS[m-1]}`;
+        }
+
+        function renderFeed(results, dates) {
+            const feedBody = document.getElementById('feed-body');
+            let total = 0;
+            let html = '';
+
+            dates.forEach(dateStr => {
+                const articles = results[dateStr] || [];
+                if (!articles.length) return;
+                total += articles.length;
+
+                html += `<div class="feed-date-sep">${formatDate(dateStr)}</div>`;
+
+                articles.forEach(art => {
+                    const safeTitle = art.title.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                    html += `
+                        <div class="feed-item" onclick="showFeedArticle(this)"
+                             data-title="${safeTitle}"
+                             data-time="${art.time} · ${formatDate(dateStr)}"
+                             data-body=""
+                             data-url="${art.url}">
+                            <span class="feed-item-time">${art.time}</span>
+                            <div class="feed-item-body">
+                                <div class="feed-item-title">${art.title}</div>
+                                <div class="feed-item-source">Lenta.ru</div>
+                            </div>
+                        </div>`;
+                });
+            });
+
+            if (!total) {
+                feedBody.innerHTML = '<div class="feed-empty">По выбранным темам новостей не найдено.</div>';
+            } else {
+                feedBody.innerHTML = html;
+                document.getElementById('feed-count').textContent = total + ' материалов';
+            }
+        }
+
+        function showFeedArticle(el) {
+            document.querySelectorAll('.feed-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+
+            const title = el.getAttribute('data-title');
+            const time  = el.getAttribute('data-time');
+            const url   = el.getAttribute('data-url');
+
+            document.getElementById('reading-title').innerText = title;
+            document.getElementById('reading-meta').innerText  = time;
+            document.getElementById('reading-body').innerHTML  =
+                '<p style="color:#888;font-style:italic;">Загружаем текст статьи…</p>';
+
+            const footer = document.getElementById('reading-footer');
+            const urlBtn = document.getElementById('reading-url');
+            if (url) { footer.style.display = 'block'; urlBtn.href = url; }
+            else      { footer.style.display = 'none'; }
+
+            if (!url) return;
+
+            fetch('/api/article-body/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const body = data.body || '';
+                if (body) {
+                    let formatted = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                    document.getElementById('reading-body').innerHTML = '<p>' + formatted + '</p>';
+                } else {
+                    document.getElementById('reading-body').innerHTML =
+                        '<p style="color:#888;">Полный текст доступен на сайте источника.</p>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('reading-body').innerHTML =
+                    '<p style="color:#888;">Не удалось загрузить текст. Перейдите по ссылке.</p>';
+            });
+        }
+
+
+        // Close panel on outside click
+        document.addEventListener('click', function(e) {
+            const btn = document.getElementById('tema-btn');
+            const panel = document.getElementById('categories-panel');
+            const arrow = document.getElementById('tema-arrow');
+            if (!btn.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.remove('open');
+                btn.classList.remove('active');
+                arrow.style.transform = '';
+            }
+        });
+
         function toggleWidget(element) {
             const widget = element.parentElement;
             if (!widget.classList.contains('open')) {

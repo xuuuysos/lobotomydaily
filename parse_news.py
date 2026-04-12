@@ -80,8 +80,9 @@ def get_lenta_links(date_obj):
             full_url = "https://lenta.ru" + href
             
             title_node = a.find(class_=re.compile(r'title'))
-            title = title_node.get_text(strip=True) if title_node else a.get_text(strip=True)
-            title = re.sub(r'\d{2}:\d{2}.*$', '', title).strip() # extra safety
+            raw_title = title_node.get_text(separator=' ') if title_node else a.get_text(separator=' ')
+            title = re.sub(r'\s+', ' ', raw_title).strip()
+            title = re.sub(r'\d{2}:\d{2}.*$', '', title).strip()  # extra safety
             
             pub_time = date_obj.replace(hour=8, minute=0)
             time_node = a.find('time') or a.find(class_=re.compile(r'date'))
