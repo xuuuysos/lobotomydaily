@@ -1,0 +1,25 @@
+stages:
+  - linter
+  - tests
+
+pylint-job:
+  stage: linter
+  before_script:
+    - python3 -V
+    - echo "Python installed, everything good!"
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pylint django pillow
+  script:
+    - pylint --fail-under=6.0 core/views.py
+
+tests-job:
+  stage: tests
+  before_script:
+    - python3 -V
+    - echo "Python installed, everything good!"
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pylint django pillow bs4
+  script:
+    - python3 manage.py test
