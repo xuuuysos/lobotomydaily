@@ -1,24 +1,23 @@
 stages:
   - demo
   - linter
-
-demo-job:
-  stage: demo
-  script:
-    - echo "Hello, world!"
+  - tests
 
 test-python-job:
   stage: demo
   script:
     - python3 -V
     - echo "Python installed, everything good!"
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pylint django pillow
 
 pylint-job:
   stage: linter
-  before_script:
-    - python3 -m venv venv
-    - source venv/bin/activate
-    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pylint django
   script:
     - pylint --fail-under=6.0 core/views.py
 
+tests-job:
+  stage: tests
+  script:
+    -python3 manage.py test
