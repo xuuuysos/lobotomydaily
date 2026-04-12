@@ -1,5 +1,6 @@
 stages:
   - demo
+  - linter
 
 demo-job:
   stage: demo
@@ -11,4 +12,13 @@ test-python-job:
   script:
     - python3 -V
     - echo "Python installed, everything good!"
+
+pylint-job:
+  stage: linter
+  before_script:
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pylint
+  script:
+    - pylint core/views.py
 
