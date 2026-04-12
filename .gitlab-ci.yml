@@ -5,3 +5,10 @@ demo-job:
   stage: demo
   script:
     - echo "Hello, world!"
+
+test-python-job:
+  stage: demo
+  script:
+    - python3 -V
+    - echo "Python installed, everything good!"
+
