@@ -7,6 +7,16 @@
     <title>Lobotomy Daily</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'core/style.css' %}?v=2">
+    <style>
+        .date-header span {
+            transition: font-size 0.3s ease, color 0.3s ease;
+        }
+        .day-widget.open .date-header span {
+            font-weight: bold;
+            font-size: 16px;
+            color: #111;
+        }
+    </style>
 </head>
 <body>
     <div class="app-layout">
@@ -120,14 +130,18 @@
                 <section class="list-column">
                     {% for day in days_data %}
                     <div class="day-widget {% if forloop.first %}open{% endif %}">
-                        <div class="date-header {% if day.is_today %}active{% endif %}" onclick="this.parentElement.classList.toggle('open')">
+                        <div class="date-header" onclick="toggleWidget(this)">
                             <span>{{ day.date|date:"j E Y"|lower }}</span>
                             <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         
                         <div class="list-items">
                             {% for article in day.news_list %}
-                            <div class="list-item">
+                            <div class="list-item" style="cursor: pointer; transition: background-color 0.2s;" onclick="showArticle(this)" 
+                                 data-title="{{ article.title }}" 
+                                 data-time="{{ article.parsed_at|time:'H:i' }} {{ article.parsed_at|date:'j E Y'|lower }}" 
+                                 data-body="{{ article.body }}" 
+                                 data-url="{{ article.url }}">
                                 <span class="time-label">{{ article.parsed_at|time:"H:i" }}</span>
                                 <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title|truncatechars:50 }}</div>
                             </div>
@@ -143,7 +157,7 @@
                 
                 <section class="reading-column">
                     <div class="reading-header">
-                        <span class="article-meta">время дата</span>
+                        <span class="article-meta" id="reading-meta">время дата</span>
                         <div class="article-actions">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -151,18 +165,58 @@
                         </div>
                     </div>
                     
-                    <h1 class="article-title">Заголовок</h1>
+                    <h1 class="article-title" id="reading-title">Выберите новость</h1>
                     
-                    <div class="article-body">
-                        <p>Премьер-министр Словакии <a href="#">Роберт Фицо</a> заявил, что готов снова посетить <a href="#">Москву</a> на День Победы. Об этом он заявил в видеоролике, опубликованном на <a href="#">YouTube</a>-канале его партии.</p>
-                        <p class="quote">«Так же, как 9 мая, я приму участие в торжествах, посвященных победе над фашизмом, в Москве», — сказал он.</p>
-                        <p>9 мая 2025 года<br>Фицо принял участие в параде Победы в Москве. Тогда он отметил, что готов приехать еще раз, если получит приглашение.</p>
-                        <p>Верховный представитель Евросоюза по иностранным делам и политике безопасности <a href="#">Кая Каллас</a> заявила, что в ЕС возмущены визитом Фицо в Россию и присутствием его на параде Победы.</p>
-                        <p><strong>Источник</strong></p>
+                    <div class="article-body" id="reading-body">
+                        <p style="color: #666;">Выберите новость из списка слева, чтобы прочитать её содержимое.</p>
+                    </div>
+                    
+                    <div class="article-footer" style="margin-top: 30px; display: none;" id="reading-footer">
+                        <a href="#" target="_blank" id="reading-url" style="display: inline-block; padding: 12px 24px; background-color: #213589; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Перейти к статье</a>
                     </div>
                 </section>
             </div>
         </main>
     </div>
+    <script>
+        function toggleWidget(element) {
+            const widget = element.parentElement;
+            if (!widget.classList.contains('open')) {
+                document.querySelectorAll('.day-widget').forEach(w => w.classList.remove('open'));
+                widget.classList.add('open');
+            } else {
+                widget.classList.remove('open');
+            }
+        }
+        
+        function showArticle(element) {
+            document.querySelectorAll('.list-item').forEach(el => {
+                el.style.backgroundColor = '';
+            });
+            element.style.backgroundColor = '#f0f4f8';
+            
+            const title = element.getAttribute('data-title');
+            const time = element.getAttribute('data-time');
+            const body = element.getAttribute('data-body');
+            const url = element.getAttribute('data-url');
+            
+            document.getElementById('reading-title').innerText = title;
+            document.getElementById('reading-meta').innerText = time;
+            
+            // Format newlines into HTML paragraphs
+            let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+            document.getElementById('reading-body').innerHTML = '<p>' + formattedBody + '</p>';
+            
+            const footer = document.getElementById('reading-footer');
+            const urlBtn = document.getElementById('reading-url');
+            
+            if (url) {
+                footer.style.display = 'block';
+                urlBtn.href = url;
+            } else {
+                footer.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

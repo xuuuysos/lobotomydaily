@@ -286,7 +286,7 @@ body {
     color: #111;
     font-size: 16px;
     font-weight: 700;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', sans-serif;
 }
 
 .list-item {
@@ -335,7 +335,7 @@ body {
 }
 
 .article-body {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', sans-serif;
     font-size: 15px;
     line-height: 1.8;
     color: #222;
@@ -359,10 +359,12 @@ body {
 
 /* Accordion updates */
 .day-widget .list-items {
-    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
 }
 .day-widget.open .list-items {
-    display: block;
+    max-height: 2000px;
 }
 .date-header {
     cursor: pointer;
