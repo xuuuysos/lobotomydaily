@@ -49,6 +49,21 @@ import json
 import urllib.request
 import re
 from bs4 import BeautifulSoup
+import hashlib
+from .utils import ALL_TAGS, classify_news
+
+def generate_deterministic_tags(url, title="", body="", seed_id=None):
+    return classify_news(title, body, url=url, news_id=seed_id)
+
+def get_top_tags(limit=5):
+    from collections import Counter
+    all_news = News.objects.all()
+    counter = Counter()
+    for n in all_news:
+        counter.update(n.tags)
+    
+    top = counter.most_common(limit)
+    return [tag for tag, count in top]
 
 def index(request):
     now = timezone.localtime()
@@ -71,7 +86,11 @@ def index(request):
             'is_today': i == 0
         })
 
-    return render(request, 'core/index.html', {'days_data': days_data})
+    top_tags = get_top_tags(5)
+    return render(request, 'core/index.html', {
+        'days_data': days_data,
+        'top_tags': top_tags
+    })
 
 
 # ── Category → URL path prefixes on lenta.ru/YYYY/MM/DD/ ─────────────────────
@@ -155,11 +174,11 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
         if not title or len(title) < 20 or len(title.split()) < 3:
             continue
 
-        # 2. Check if it matches the rubric by URL OR by keywords in Title
-        title_lower = title.lower()
-        matches_keywords = any(kw in title_lower for kw in keywords)
+        seen.add(full_url)
 
-        if not (in_section_url or matches_keywords):
+        # Tag-based filtering: Check if the selected category is in the article's generated tags
+        article_tags = generate_deterministic_tags(full_url, title=title)
+        if category_label not in article_tags:
             continue
 
         seen.add(full_url)
@@ -176,6 +195,7 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
             'title': title,
             'url': full_url,
             'time': time_str or f'{d:02d}.{m:02d}',
+            'tags': generate_deterministic_tags(full_url, title=title),
         })
 
         if len(articles) >= 20: # Slightly more per rubric

@@ -10,6 +10,11 @@ class News(models.Model):
     url = models.URLField(unique=True)
     parsed_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def tags(self):
+        from .utils import classify_news
+        return classify_news(self.title, self.body, url=self.url, news_id=self.id)
+
     class Meta:
         managed = False
         db_table = 'news'

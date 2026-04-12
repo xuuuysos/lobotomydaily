@@ -20,12 +20,12 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 320px;
+    width: clamp(240px, 18vw, 280px);
     background-color: #1a2b88; /* Dark blue from the image */
     color: rgba(255, 255, 255, 0.9);
     display: flex;
     flex-direction: column;
-    padding-top: 30px;
+    padding-top: 20px;
     flex-shrink: 0;
 }
 
@@ -39,9 +39,9 @@ body {
 }
 
 .logo-circle {
-    width: 60px;
-    height: 60px;
-    background-color: #fff;
+    width: 48px;
+    height: 48px;
+    background-color: transparent;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -51,11 +51,12 @@ body {
 }
 
 .logo-text {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
     color: #fff;
-    line-height: 1.2;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
 }
 
 .collapse-btn {
@@ -70,8 +71,8 @@ body {
 .sidebar-item {
     display: flex;
     align-items: center;
-    padding: 8px 30px;
-    font-size: 13px;
+    padding: 6px 20px;
+    font-size: 12px;
     cursor: pointer;
     margin-bottom: 4px;
 }
@@ -116,7 +117,7 @@ body {
 }
 
 .period-controls {
-    padding: 10px 30px;
+    padding: 10px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
     padding-bottom: 20px;
 }
@@ -194,7 +195,7 @@ body {
 }
 
 .topbar {
-    height: 70px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -263,7 +264,7 @@ body {
 }
 
 .list-column {
-    width: 380px;
+    width: clamp(320px, 25vw, 400px);
     border-right: 1px solid #eaeaea;
     display: flex;
     flex-direction: column;
@@ -272,7 +273,7 @@ body {
 }
 
 .date-header {
-    padding: 25px 30px;
+    padding: 15px 20px;
     font-size: 13px;
     font-weight: 600;
     color: #333;
@@ -296,14 +297,14 @@ body {
 }
 
 .time-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #111;
 }
 
 .reading-column {
     flex-grow: 1;
-    padding: 40px 60px;
+    padding: 30px 40px;
     overflow-y: auto;
 }
 
@@ -328,7 +329,7 @@ body {
 
 .article-title {
     font-family: 'Inter', sans-serif;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
     margin-bottom: 30px;
     color: #111;
@@ -336,8 +337,8 @@ body {
 
 .article-body {
     font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    line-height: 1.8;
+    font-size: 14px;
+    line-height: 1.7;
     color: #222;
     max-width: 700px;
 }
@@ -389,4 +390,18 @@ body {
 }
 .list-item:hover {
     background-color: #f0f0f0;
+}
+
+/* Fluid adaptations for smaller screens */
+@media (max-width: 1280px) {
+    .sidebar { width: 240px; }
+    .list-column { width: 350px; }
+    .reading-column { padding: 30px 40px; }
+    .article-title { font-size: 24px; }
+}
+
+@media (max-width: 1024px) {
+    .sidebar { width: 220px; }
+    .sidebar-item { padding: 8px 20px; }
+    .logo-section { padding: 0 20px; }
 }

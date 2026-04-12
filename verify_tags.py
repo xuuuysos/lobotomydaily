@@ -1,0 +1,26 @@
+import sys
+import os
+
+# Set up Django environment
+sys.path.append('d:\\lobotom\\lobotomynews')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lobotomynews.settings')
+import django
+django.setup()
+
+from core.utils import classify_news
+
+test_titles = [
+    "Трагедия у символа свободы: десятки погибших в давке на Гаити",
+    "Исторический момент в Бундеслиге: женщина впервые возглавила мужской клуб из топ-лиги",
+    "«Это выбор между Европой и Россией». Почему победа проукраинских сил в Венгрии проблема для Зеленского",
+    "Скандал в Хельсинки: финских детей отправляли в «Артек» за счет бюджета",
+    "Биткоин взлетел выше 70 тысяч на фоне одобрения ETF",
+    "Новый смартфон от Apple получил титановый корпус и USB-C",
+    "Ученые нашли воду на далекой экзопланете в обитаемой зоне",
+]
+
+for title in test_titles:
+    tags = classify_news(title, "")
+    print(f"Title: {title}")
+    print(f"Tags:  {', '.join(tags) if tags else 'NONE'}")
+    print("-" * 50)

@@ -33,24 +33,30 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
             max-width: 0;
             opacity: 0;
-            transition: max-width 0.35s ease, opacity 0.25s ease;
+            transition: max-width 0.4s ease, opacity 0.3s ease;
             white-space: nowrap;
+            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none; /* Firefox */
         }
+        .categories-panel::-webkit-scrollbar { display: none; }
+        
         .categories-panel.open {
-            max-width: 900px;
+            max-width: calc(100% - 140px);
             opacity: 1;
+            margin-right: 15px;
         }
 
         .cat-chip {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 5px 13px;
-            border-radius: 20px;
-            font-size: 12px;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
             font-weight: 600;
             color: #1a2b88;
             background-color: #ebf0fe;
@@ -86,7 +92,7 @@
         #category-feed.visible { display: flex; }
 
         .feed-header {
-            padding: 16px 30px 12px;
+            padding: 12px 20px 8px;
             border-bottom: 1px solid #eaeaea;
             display: flex;
             align-items: center;
@@ -123,13 +129,14 @@
         }
 
         .feed-item {
-            padding: 14px 30px;
+            padding: 10px 20px;
             border-bottom: 1px solid #eaeaea;
             cursor: pointer;
             transition: background-color 0.15s;
             display: flex;
             gap: 12px;
             align-items: flex-start;
+            position: relative;
         }
         .feed-item:hover { background-color: #f5f7ff; }
         .feed-item.active { background-color: #ebf0fe; }
@@ -148,6 +155,10 @@
             font-weight: 500;
             color: #111;
             line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .feed-item-source {
             font-size: 11px;
@@ -203,20 +214,92 @@
         .list-column:has(#category-feed.visible) #widgets-header {
             display: none;
         }
+        /* Tags styling */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .tag-pill {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background-color: #f1f4ff;
+            color: #1a2b88;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(26, 43, 136, 0.1);
+            user-select: none;
+        }
+        .tag-pill:hover {
+            background-color: #1a2b88;
+            color: #fff;
+            border-color: #1a2b88;
+        }
+        
+        .list-item {
+            position: relative;
+        }
+        .list-item-tags {
+            position: absolute;
+            top: 14px;
+            right: 30px;
+            display: flex;
+            gap: 4px;
+            max-width: 180px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .list-item-tags .tag-pill {
+            font-size: 8px;
+            padding: 1px 6px;
+            background-color: rgba(26, 43, 136, 0.04);
+            color: #1a2b88;
+            border-radius: 2px;
+            border: none;
+        }
+        
+        /* Prevent overlap and limit lines */
+        .news-item-snippet, .feed-item-body {
+            padding-right: 140px;
+        }
+        .news-item-snippet {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Ensure topbar actions don't shrink */
+        .topbar-actions {
+            flex-shrink: 0;
+        }
+        
+        .search-input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            padding: 8px 0;
+            font-size: 14px;
+            font-family: inherit;
+            background: transparent;
+            color: #111;
+            min-width: 100px;
+        }
+        .search-input::placeholder {
+            color: #a0a0a0;
+        }
     </style>
 </head>
 <body>
     <div class="app-layout">
         <aside class="sidebar">
-            <div class="logo-section">
+            <a href="/" class="logo-section">
                 <div class="logo-circle">
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#213589" stroke-width="1.2">
-                        <path d="M12 2a10 10 0 0 0-7.39 16.7l.54 1.3A2 2 0 0 0 7 21h10a2 2 0 0 0 1.85-1.02l.53-1.28A10 10 0 0 0 12 2z"></path>
-                        <path d="M12 2C8.686 2 6 5.58 6 10c0 4.418 2.686 8 6 8s6-3.582 6-8c0-4.42-2.686-8-6-8z"></path>
-                        <line x1="12" y1="2" x2="12" y2="10"></line>
-                        <line x1="9" y1="4" x2="9" y2="14"></line>
-                        <line x1="15" y1="4" x2="15" y2="14"></line>
-                    </svg>
+                    <img src="{% static 'core/logo.png' %}" alt="Logo" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                 </div>
                 <div class="logo-text">Lobotomy Daily</div>
                 <div class="collapse-btn">
@@ -225,7 +308,7 @@
                         <polyline points="11 18 5 12 11 6"></polyline>
                     </svg>
                 </div>
-            </div>
+            </a>
 
             <div class="sidebar-item" style="margin-top: 20px;">
                 <div class="checkbox-box filled"></div>
@@ -284,10 +367,6 @@
         <main class="main-area">
             <header class="topbar">
                 <div class="search-area" style="flex-grow:1;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
                     <div id="tema-btn" class="search-tag" onclick="toggleCategories()">
                         ТЕМА
                         <svg id="tema-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s ease;">
@@ -295,38 +374,15 @@
                         </svg>
                     </div>
                     <div class="categories-panel" id="categories-panel">
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="политик,партия,президент,правительство,депутат,парламент,министр,закон,kremlin,путин,госдума,выборы,сенат,совет">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                            Политика
+                        {% for tag in top_tags %}
+                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="{{ tag|lower }}">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                            {{ tag }}
                         </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="спорт,футбол,хоккей,баскетбол,теннис,олимпи,чемпионат,матч,игрок,тренер,клуб,сборная,турнир,гол,атлет">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                            Спорт
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="экономик,рубль,доллар,биржа,банк,инфляци,ввп,торговл,бизнес,рынок,акци,компани,финанс,бюджет,налог">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                            Экономика
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="технолог,искусственный интеллект,ии,робот,компьютер,интернет,цифр,смартфон,программ,разработ,it,ит,данные,алгоритм">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                            Технологии
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="культур,музык,кино,театр,выставк,искусств,фильм,спектакль,концерт,художник,режиссёр,литератур,книг">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                            Культура
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="наук,учен,исследован,открыти,физик,химик,биолог,астроном,космос,эксперимент,лаборатор">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                            Наука
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="общество,социальн,образован,школ,студент,молодёж,женщин,семь,дет,граждан,право,трудов">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            Общество
-                        </div>
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="регион,область,край,республик,губернатор,город,район,москв,петербург,мэр,муниципал">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            Регионы
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="topbar-actions">
@@ -368,9 +424,15 @@
                                  data-title="{{ article.title }}" 
                                  data-time="{{ article.parsed_at|time:'H:i' }} {{ article.parsed_at|date:'j E Y'|lower }}" 
                                  data-body="{{ article.body }}" 
-                                 data-url="{{ article.url }}">
+                                 data-url="{{ article.url }}"
+                                 data-tags="{{ article.tags|join:',' }}">
+                                <div class="list-item-tags">
+                                    {% for tag in article.tags %}
+                                    <span class="tag-pill">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
                                 <span class="time-label">{{ article.parsed_at|time:"H:i" }}</span>
-                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title|truncatechars:50 }}</div>
+                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title }}</div>
                             </div>
                             {% empty %}
                             <div class="list-item">
@@ -394,7 +456,10 @@
                 
                 <section class="reading-column">
                     <div class="reading-header">
-                        <span class="article-meta" id="reading-meta">время дата</span>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span class="article-meta" id="reading-meta">время дата</span>
+                            <div id="reading-tags" class="tags-container" style="margin: 0; margin-top: 5px;"></div>
+                        </div>
                         <div class="article-actions">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -526,12 +591,18 @@
 
                 articles.forEach(art => {
                     const safeTitle = art.title.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                    const tags = art.tags || [];
+                    const tagsHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
                     html += `
                         <div class="feed-item" onclick="showFeedArticle(this)"
                              data-title="${safeTitle}"
                              data-time="${art.time} · ${formatDate(dateStr)}"
                              data-body=""
-                             data-url="${art.url}">
+                             data-url="${art.url}"
+                             data-tags="${tags.join(',')}">
+                            <div class="list-item-tags">
+                                ${tagsHtml}
+                            </div>
                             <span class="feed-item-time">${art.time}</span>
                             <div class="feed-item-body">
                                 <div class="feed-item-title">${art.title}</div>
@@ -556,9 +627,14 @@
             const title = el.getAttribute('data-title');
             const time  = el.getAttribute('data-time');
             const url   = el.getAttribute('data-url');
-
+            const tags  = el.getAttribute('data-tags') || '';
+            
             document.getElementById('reading-title').innerText = title;
             document.getElementById('reading-meta').innerText  = time;
+            
+            // Update tags
+            const tagsHtml = tags ? tags.split(',').map(tag => `<span class="tag-pill">${tag}</span>`).join('') : '';
+            document.getElementById('reading-tags').innerHTML = tagsHtml;
             document.getElementById('reading-body').innerHTML  =
                 '<p style="color:#888;font-style:italic;">Загружаем текст статьи…</p>';
 
@@ -592,6 +668,24 @@
         }
 
 
+        function liveSearch() {
+            const query = document.getElementById('news-search').value.toLowerCase().trim();
+            const listItems = document.querySelectorAll('.list-item');
+            const feedItems = document.querySelectorAll('.feed-item');
+            
+            // Filter list items (accordion)
+            listItems.forEach(item => {
+                const tags = (item.getAttribute('data-tags') || '').toLowerCase();
+                item.style.display = tags.includes(query) ? '' : 'none';
+            });
+            
+            // Filter feed items (categories)
+            feedItems.forEach(item => {
+                const tags = (item.getAttribute('data-tags') || '').toLowerCase();
+                item.style.display = tags.includes(query) ? '' : 'none';
+            });
+        }
+
         // Close panel on outside click
         document.addEventListener('click', function(e) {
             const btn = document.getElementById('tema-btn');
@@ -622,11 +716,16 @@
             
             const title = element.getAttribute('data-title');
             const time = element.getAttribute('data-time');
+            const tags = element.getAttribute('data-tags') || '';
             const body = element.getAttribute('data-body');
             const url = element.getAttribute('data-url');
             
             document.getElementById('reading-title').innerText = title;
             document.getElementById('reading-meta').innerText = time;
+            
+            // Update tags
+            const tagsHtml = tags ? tags.split(',').map(tag => `<span class="tag-pill">${tag}</span>`).join('') : '';
+            document.getElementById('reading-tags').innerHTML = tagsHtml;
             
             // Format newlines into HTML paragraphs
             let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
