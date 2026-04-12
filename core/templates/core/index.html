@@ -1,16 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lobotomy Daily</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{% static 'core/style.css' %}?v=2">
     <style>
         .date-header span {
             transition: font-size 0.35s ease, color 0.35s ease;
         }
+
         .day-widget.open .date-header span {
             font-weight: bold;
             font-size: 16px;
@@ -23,11 +27,15 @@
             user-select: none;
             transition: background-color 0.2s, color 0.2s;
         }
+
         #tema-btn.active {
             background-color: #1a2b88;
             color: #fff;
         }
-        #tema-btn.active svg { stroke: rgba(255,255,255,0.7); }
+
+        #tema-btn.active svg {
+            stroke: rgba(255, 255, 255, 0.7);
+        }
 
         .categories-panel {
             display: flex;
@@ -39,11 +47,16 @@
             opacity: 0;
             transition: max-width 0.4s ease, opacity 0.3s ease;
             white-space: nowrap;
-            -ms-overflow-style: none; /* IE/Edge */
-            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
+            scrollbar-width: none;
+            /* Firefox */
         }
-        .categories-panel::-webkit-scrollbar { display: none; }
-        
+
+        .categories-panel::-webkit-scrollbar {
+            display: none;
+        }
+
         .categories-panel.open {
             max-width: calc(100% - 140px);
             opacity: 1;
@@ -66,16 +79,21 @@
             transition: background-color 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
             flex-shrink: 0;
         }
+
         .cat-chip:hover {
             background-color: #d4ddfb;
             transform: translateY(-1px);
         }
+
         .cat-chip.selected {
             background-color: #1a2b88;
             color: #fff;
             border-color: #1a2b88;
         }
-        .cat-chip svg { flex-shrink: 0; }
+
+        .cat-chip svg {
+            flex-shrink: 0;
+        }
 
         /* ── Category Feed ─────────────────────────── */
         #category-feed {
@@ -85,11 +103,22 @@
             flex-grow: 1;
             animation: feedIn 0.3s ease;
         }
+
         @keyframes feedIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        #category-feed.visible { display: flex; }
+
+        #category-feed.visible {
+            display: flex;
+        }
 
         .feed-header {
             padding: 12px 20px 8px;
@@ -102,6 +131,7 @@
             background: #fff;
             z-index: 2;
         }
+
         .feed-header-title {
             font-size: 12px;
             font-weight: 700;
@@ -109,6 +139,7 @@
             text-transform: uppercase;
             letter-spacing: 0.6px;
         }
+
         .feed-count {
             font-size: 11px;
             color: #a0a0a0;
@@ -138,8 +169,14 @@
             align-items: flex-start;
             position: relative;
         }
-        .feed-item:hover { background-color: #f5f7ff; }
-        .feed-item.active { background-color: #ebf0fe; }
+
+        .feed-item:hover {
+            background-color: #f5f7ff;
+        }
+
+        .feed-item.active {
+            background-color: #ebf0fe;
+        }
 
         .feed-item-time {
             font-size: 11px;
@@ -149,7 +186,9 @@
             padding-top: 2px;
             flex-shrink: 0;
         }
+
         .feed-item-body {}
+
         .feed-item-title {
             font-size: 13px;
             font-weight: 500;
@@ -160,6 +199,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
         .feed-item-source {
             font-size: 11px;
             color: #a0a0a0;
@@ -172,12 +212,18 @@
             color: #a0a0a0;
             font-size: 13px;
         }
+
         .feed-loading svg {
             animation: spin 1s linear infinite;
             display: block;
             margin: 0 auto 10px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         .feed-empty {
             padding: 40px 30px;
@@ -198,22 +244,26 @@
             background: #fff;
             z-index: 3;
         }
+
         .list-section-title {
             font-size: 18px;
             font-weight: 700;
             color: #111;
             letter-spacing: -0.3px;
         }
+
         .list-section-sub {
             font-size: 12px;
             color: #a0a0a0;
             font-weight: 400;
         }
+
         /* Hide widgets-header when feed is active */
-        #category-feed.visible ~ * .list-section-header,
+        #category-feed.visible~* .list-section-header,
         .list-column:has(#category-feed.visible) #widgets-header {
             display: none;
         }
+
         /* Tags styling */
         .tags-container {
             display: flex;
@@ -221,6 +271,7 @@
             gap: 6px;
             margin-bottom: 15px;
         }
+
         .tag-pill {
             font-size: 10px;
             font-weight: 700;
@@ -234,15 +285,17 @@
             border: 1px solid rgba(26, 43, 136, 0.1);
             user-select: none;
         }
+
         .tag-pill:hover {
             background-color: #1a2b88;
             color: #fff;
             border-color: #1a2b88;
         }
-        
+
         .list-item {
             position: relative;
         }
+
         .list-item-tags {
             position: absolute;
             top: 14px;
@@ -253,6 +306,7 @@
             flex-wrap: wrap;
             justify-content: flex-end;
         }
+
         .list-item-tags .tag-pill {
             font-size: 8px;
             padding: 1px 6px;
@@ -261,23 +315,25 @@
             border-radius: 2px;
             border: none;
         }
-        
+
         /* Prevent overlap and limit lines */
-        .news-item-snippet, .feed-item-body {
+        .news-item-snippet,
+        .feed-item-body {
             padding-right: 140px;
         }
+
         .news-item-snippet {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        
+
         /* Ensure topbar actions don't shrink */
         .topbar-actions {
             flex-shrink: 0;
         }
-        
+
         .search-input {
             flex-grow: 1;
             border: none;
@@ -289,21 +345,25 @@
             color: #111;
             min-width: 100px;
         }
+
         .search-input::placeholder {
             color: #a0a0a0;
         }
     </style>
 </head>
+
 <body>
     <div class="app-layout">
         <aside class="sidebar">
             <a href="/" class="logo-section">
                 <div class="logo-circle">
-                    <img src="{% static 'core/logo.png' %}" alt="Logo" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                    <img src="{% static 'core/logo.png' %}" alt="Logo"
+                        style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                 </div>
                 <div class="logo-text">Lobotomy Daily</div>
                 <div class="collapse-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
                         <polyline points="11 18 5 12 11 6"></polyline>
                     </svg>
@@ -313,7 +373,8 @@
             <div class="sidebar-item" style="margin-top: 20px;">
                 <div class="checkbox-box filled"></div>
                 <span class="item-text">Срочные сообщения</span>
-                <svg class="lightning-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="lightning-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
             </div>
@@ -343,14 +404,30 @@
                     <span>ЖАНРЫ</span>
                 </div>
                 <div class="genres-list">
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
-                    <div class="sidebar-item"><div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span></div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    </div>
                 </div>
             </div>
 
@@ -369,15 +446,20 @@
                 <div class="search-area" style="flex-grow:1;">
                     <div id="tema-btn" class="search-tag" onclick="toggleCategories()">
                         ТЕМА
-                        <svg id="tema-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s ease;">
+                        <svg id="tema-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            style="transition:transform 0.3s ease;">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </div>
                     <div class="categories-panel" id="categories-panel">
                         {% for tag in top_tags %}
                         <div class="cat-chip" onclick="selectCat(this)" data-keywords="{{ tag|lower }}">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
+                                </path>
                                 <line x1="7" y1="7" x2="7.01" y2="7"></line>
                             </svg>
                             {{ tag }}
@@ -386,10 +468,34 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <a href="{% url 'register' %}" class="login-btn">Войти</a>
+                    <div class="action-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="action-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="action-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="user-avatar">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User">
+                    </div>
                 </div>
             </header>
-            
+
             <div class="content-columns">
                 <section class="list-column">
 
@@ -400,27 +506,31 @@
                     </div>
 
                     {% for day in days_data %}
-                    <div class="day-widget {% if forloop.first %}open{% endif %}" data-date="{{ day.date|date:'Y-m-d' }}">
+                    <div class="day-widget {% if forloop.first %}open{% endif %}"
+                        data-date="{{ day.date|date:'Y-m-d' }}">
                         <div class="date-header" onclick="toggleWidget(this)">
                             <span>{{ day.date|date:"j E Y"|lower }}</span>
-                            <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="#a0a0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </div>
-                        
+
                         <div class="list-items">
                             {% for article in day.news_list %}
-                            <div class="list-item" style="cursor: pointer; transition: background-color 0.2s;" onclick="showArticle(this)" 
-                                 data-title="{{ article.title }}" 
-                                 data-time="{{ article.parsed_at|time:'H:i' }} {{ article.parsed_at|date:'j E Y'|lower }}" 
-                                 data-body="{{ article.body }}" 
-                                 data-url="{{ article.url }}"
-                                 data-tags="{{ article.tags|join:',' }}">
+                            <div class="list-item" style="cursor: pointer; transition: background-color 0.2s;"
+                                onclick="showArticle(this)" data-title="{{ article.title }}"
+                                data-time="{{ article.parsed_at|time:'H:i' }} {{ article.parsed_at|date:'j E Y'|lower }}"
+                                data-body="{{ article.body }}" data-url="{{ article.url }}"
+                                data-tags="{{ article.tags|join:',' }}">
                                 <div class="list-item-tags">
                                     {% for tag in article.tags %}
                                     <span class="tag-pill">{{ tag }}</span>
                                     {% endfor %}
                                 </div>
                                 <span class="time-label">{{ article.parsed_at|time:"H:i" }}</span>
-                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title }}</div>
+                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{
+                                    article.title }}</div>
                             </div>
                             {% empty %}
                             <div class="list-item">
@@ -441,7 +551,7 @@
                     </div>
 
                 </section>
-                
+
                 <section class="reading-column">
                     <div class="reading-header">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -449,20 +559,64 @@
                             <div id="reading-tags" class="tags-container" style="margin: 0; margin-top: 5px;"></div>
                         </div>
                         <div class="article-actions">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2">
+                                </path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
                         </div>
                     </div>
-                    
+
                     <h1 class="article-title" id="reading-title">Выберите новость</h1>
-                    
+
                     <div class="article-body" id="reading-body">
                         <p style="color: #666;">Выберите новость из списка слева, чтобы прочитать её содержимое.</p>
                     </div>
-                    
+
                     <div class="article-footer" style="margin-top: 30px; display: none;" id="reading-footer">
-                        <a href="#" target="_blank" id="reading-url" style="display: inline-block; padding: 12px 24px; background-color: #213589; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Перейти к статье</a>
+                        <a href="#" target="_blank" id="reading-url"
+                            style="display: inline-block; padding: 12px 24px; background-color: #213589; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Перейти
+                            к статье</a>
+                    </div>
+
+                    <div id="comments-section"
+                        style="display: none; margin-top: 40px; border-top: 1px solid #eaeaea; padding-top: 20px;">
+                        <h3 style="font-size: 18px; margin-bottom: 20px; color: #111;">Комментарии (<span
+                                id="comments-count">0</span>)</h3>
+
+                        <div id="comments-list"
+                            style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <!-- Comments will be injected here -->
+                        </div>
+
+                        <div class="comment-form-container"
+                            style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                            {% if request.user.is_authenticated %}
+                            <textarea id="comment-text" rows="3" placeholder="Оставьте ваш комментарий..."
+                                style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ddd; border-radius: 6px; resize: vertical; margin-bottom: 15px; font-family: inherit; font-size: 14px;"></textarea>
+                            <button onclick="postComment()"
+                                style="background-color: #1a2b88; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s;">Отправить</button>
+                            <div id="comment-error"
+                                style="color: red; font-size: 13px; margin-top: 10px; display: none;"></div>
+                            {% else %}
+                            <div style="text-align: center; color: #666; font-size: 14px;">
+                                <p>Только зарегистрированные пользователи могут оставлять комментарии.</p>
+                                <a href="{% url 'login' %}"
+                                    style="display: inline-block; margin-top: 10px; padding: 8px 16px; background-color: #213589; color: white; text-decoration: none; border-radius: 6px; font-size: 13px;">Войти</a>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </section>
             </div>
@@ -543,26 +697,26 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ categoryData, dates })
             })
-            .then(r => r.json())
-            .then(data => {
-                renderFeed(data.results || {}, dates);
-            })
-            .catch(() => {
-                feedBody.innerHTML = '<div class="feed-empty">Не удалось загрузить новости. Проверьте соединение.</div>';
-            });
+                .then(r => r.json())
+                .then(data => {
+                    renderFeed(data.results || {}, dates);
+                })
+                .catch(() => {
+                    feedBody.innerHTML = '<div class="feed-empty">Не удалось загрузить новости. Проверьте соединение.</div>';
+                });
         }
 
-        const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        const RU_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
         function formatDate(dateStr) {
             // dateStr = 'YYYY-MM-DD'
             const [y, m, d] = dateStr.split('-').map(Number);
             const today = new Date();
-            const isToday = today.getFullYear()===y && today.getMonth()+1===m && today.getDate()===d;
-            const isYesterday = new Date(today - 86400000).getDate()===d &&
-                                new Date(today - 86400000).getMonth()+1===m;
+            const isToday = today.getFullYear() === y && today.getMonth() + 1 === m && today.getDate() === d;
+            const isYesterday = new Date(today - 86400000).getDate() === d &&
+                new Date(today - 86400000).getMonth() + 1 === m;
             if (isToday) return 'Сегодня';
             if (isYesterday) return 'Вчера';
-            return `${d} ${RU_MONTHS[m-1]}`;
+            return `${d} ${RU_MONTHS[m - 1]}`;
         }
 
         function renderFeed(results, dates) {
@@ -613,46 +767,52 @@
             el.classList.add('active');
 
             const title = el.getAttribute('data-title');
-            const time  = el.getAttribute('data-time');
-            const url   = el.getAttribute('data-url');
-            const tags  = el.getAttribute('data-tags') || '';
-            
+            const time = el.getAttribute('data-time');
+            const url = el.getAttribute('data-url');
+            const tags = el.getAttribute('data-tags') || '';
+
             document.getElementById('reading-title').innerText = title;
-            document.getElementById('reading-meta').innerText  = time;
-            
+            document.getElementById('reading-meta').innerText = time;
+
             // Update tags
             const tagsHtml = tags ? tags.split(',').map(tag => `<span class="tag-pill">${tag}</span>`).join('') : '';
             document.getElementById('reading-tags').innerHTML = tagsHtml;
-            document.getElementById('reading-body').innerHTML  =
+            document.getElementById('reading-body').innerHTML =
                 '<p style="color:#888;font-style:italic;">Загружаем текст статьи…</p>';
 
             const footer = document.getElementById('reading-footer');
             const urlBtn = document.getElementById('reading-url');
             if (url) { footer.style.display = 'block'; urlBtn.href = url; }
-            else      { footer.style.display = 'none'; }
+            else { footer.style.display = 'none'; }
 
-            if (!url) return;
+            if (!url) {
+                document.getElementById('comments-section').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('comments-section').style.display = 'block';
+            loadComments(url);
 
             fetch('/api/article-body/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url })
             })
-            .then(r => r.json())
-            .then(data => {
-                const body = data.body || '';
-                if (body) {
-                    let formatted = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-                    document.getElementById('reading-body').innerHTML = '<p>' + formatted + '</p>';
-                } else {
+                .then(r => r.json())
+                .then(data => {
+                    const body = data.body || '';
+                    if (body) {
+                        let formatted = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        document.getElementById('reading-body').innerHTML = '<p>' + formatted + '</p>';
+                    } else {
+                        document.getElementById('reading-body').innerHTML =
+                            '<p style="color:#888;">Полный текст доступен на сайте источника.</p>';
+                    }
+                })
+                .catch(() => {
                     document.getElementById('reading-body').innerHTML =
-                        '<p style="color:#888;">Полный текст доступен на сайте источника.</p>';
-                }
-            })
-            .catch(() => {
-                document.getElementById('reading-body').innerHTML =
-                    '<p style="color:#888;">Не удалось загрузить текст. Перейдите по ссылке.</p>';
-            });
+                        '<p style="color:#888;">Не удалось загрузить текст. Перейдите по ссылке.</p>';
+                });
         }
 
 
@@ -660,13 +820,13 @@
             const query = document.getElementById('news-search').value.toLowerCase().trim();
             const listItems = document.querySelectorAll('.list-item');
             const feedItems = document.querySelectorAll('.feed-item');
-            
+
             // Filter list items (accordion)
             listItems.forEach(item => {
                 const tags = (item.getAttribute('data-tags') || '').toLowerCase();
                 item.style.display = tags.includes(query) ? '' : 'none';
             });
-            
+
             // Filter feed items (categories)
             feedItems.forEach(item => {
                 const tags = (item.getAttribute('data-tags') || '').toLowerCase();
@@ -675,7 +835,7 @@
         }
 
         // Close panel on outside click
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const btn = document.getElementById('tema-btn');
             const panel = document.getElementById('categories-panel');
             const arrow = document.getElementById('tema-arrow');
@@ -695,40 +855,125 @@
                 widget.classList.remove('open');
             }
         }
-        
+
         function showArticle(element) {
             document.querySelectorAll('.list-item').forEach(el => {
                 el.style.backgroundColor = '';
             });
             element.style.backgroundColor = '#f0f4f8';
-            
+
             const title = element.getAttribute('data-title');
             const time = element.getAttribute('data-time');
             const tags = element.getAttribute('data-tags') || '';
             const body = element.getAttribute('data-body');
             const url = element.getAttribute('data-url');
-            
+
             document.getElementById('reading-title').innerText = title;
             document.getElementById('reading-meta').innerText = time;
-            
+
             // Update tags
             const tagsHtml = tags ? tags.split(',').map(tag => `<span class="tag-pill">${tag}</span>`).join('') : '';
             document.getElementById('reading-tags').innerHTML = tagsHtml;
-            
+
             // Format newlines into HTML paragraphs
             let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
             document.getElementById('reading-body').innerHTML = '<p>' + formattedBody + '</p>';
-            
+
             const footer = document.getElementById('reading-footer');
             const urlBtn = document.getElementById('reading-url');
-            
+
             if (url) {
                 footer.style.display = 'block';
                 urlBtn.href = url;
+                document.getElementById('comments-section').style.display = 'block';
+                loadComments(url);
             } else {
                 footer.style.display = 'none';
+                document.getElementById('comments-section').style.display = 'none';
             }
+        }
+
+        let currentArticleUrl = null;
+
+        function loadComments(url) {
+            currentArticleUrl = url;
+            const list = document.getElementById('comments-list');
+            list.innerHTML = '<div style="color: #888; font-size: 13px;">Загружаем комментарии...</div>';
+
+            fetch('/api/comments/get/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        list.innerHTML = '<div style="color: red; font-size: 13px;">Ошибка загрузки комментариев.</div>';
+                        return;
+                    }
+                    const comments = data.comments || [];
+                    document.getElementById('comments-count').innerText = comments.length;
+
+                    if (comments.length === 0) {
+                        list.innerHTML = '<div style="color: #666; font-size: 13px;">Пока нет комментариев. Будьте первым!</div>';
+                        return;
+                    }
+
+                    list.innerHTML = '';
+                    comments.forEach(c => {
+                        list.innerHTML += `
+                        <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eaeaea;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong style="font-size: 14px; color: #1a2b88;">${c.author}</strong>
+                                <span style="font-size: 12px; color: #a0a0a0;">${c.created_at}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #333; line-height: 1.5; white-space: pre-wrap;">${c.text.replace(/</g, "&lt;")}</div>
+                        </div>
+                    `;
+                    });
+                })
+                .catch(() => {
+                    list.innerHTML = '<div style="color: red; font-size: 13px;">Не удалось загрузить комментарии.</div>';
+                });
+        }
+
+        function postComment() {
+            if (!currentArticleUrl) return;
+            const textInput = document.getElementById('comment-text');
+            const errorDiv = document.getElementById('comment-error');
+            const text = textInput.value.trim();
+
+            if (!text) {
+                errorDiv.innerText = "Напишите что-нибудь перед отправкой.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            fetch('/api/comments/add/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: currentArticleUrl, text: text })
+            })
+                .then(r => {
+                    if (r.status === 403) throw new Error("Необходимо войти в систему");
+                    return r.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    // clear input and reload comments
+                    textInput.value = '';
+                    loadComments(currentArticleUrl);
+                })
+                .catch(err => {
+                    errorDiv.innerText = err.message;
+                    errorDiv.style.display = 'block';
+                });
         }
     </script>
 </body>
+
 </html>
