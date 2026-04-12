@@ -256,6 +256,24 @@ body {
     margin-left: 10px;
 }
 
+.login-btn {
+    text-decoration: none;
+    color: #1a2b88;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 6px;
+    background-color: #ebf0fe;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.login-btn:hover {
+    background-color: #d4ddfb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 43, 136, 0.1);
+}
+
 /* Content Columns */
 .content-columns {
     display: flex;
