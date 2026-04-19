@@ -8,8 +8,6 @@ urlpatterns = [
     path('accounts/register/', core.views.register, name='register'),
     path('profile/', core.views.profile, name='profile'),
     path('', core.views.index, name='index'),
-    path('profile', core.views.profile),
-    path('register/', core.views.register, name='register'),
     path('api/category-news/', core.views.fetch_category_news, name='fetch_category_news'),
     path('api/article-body/', core.views.fetch_article_body, name='fetch_article_body'),
     path('api/comments/get/', core.views.get_comments, name='get_comments'),

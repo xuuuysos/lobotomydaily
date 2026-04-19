@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация — Lobotomy News</title>
+    <title>Вход — Lobotomy News</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'core/style.css' %}">
 </head>
@@ -27,41 +27,32 @@
         
         <!-- Main Area -->
         <div class="auth-main">
-            <a href="{% url 'login' %}" class="auth-top-link">Уже есть аккаунт?</a>
+            <a href="{% url 'register' %}" class="auth-top-link">Нет аккаунта?</a>
             
             <div class="auth-container">
-                <h1 class="auth-title">Регистрация</h1>
+                <h1 class="auth-title">ВХОД</h1>
                 
                 <form method="post">
                     {% csrf_token %}
                     
                     {% if form.errors %}
                     <div style="color: #eb5757; background: rgba(235, 87, 87, 0.1); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 13px;">
-                        {% for field, errors in form.errors.items %}
-                            {% for error in errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
-                        {% endfor %}
+                        Введен неправильный логин или пароль. Попробуйте еще раз.
                     </div>
                     {% endif %}
 
                     <div class="auth-form-group">
-                        <label for="username">Логин</label>
-                        <input type="text" id="username" name="username" class="auth-input" value="{{ form.username.value|default:'' }}" required>
+                        <label for="id_username">Логин</label>
+                        <input type="text" id="id_username" name="username" class="auth-input" required>
                     </div>
                     
                     <div class="auth-form-group">
-                        <label for="password">Пароль</label>
-                        <input type="password" id="password" name="password1" class="auth-input" required>
-                    </div>
-                    
-                    <div class="auth-form-group">
-                        <label for="password2">Пароль (ещё раз)</label>
-                        <input type="password" id="password2" name="password2" class="auth-input" required>
+                        <label for="id_password">Пароль</label>
+                        <input type="password" id="id_password" name="password" class="auth-input" required>
                     </div>
                     
                     <div style="margin-top: 30px;">
-                        <button type="submit" class="auth-submit-btn">Зарегистрироваться</button>
+                        <button type="submit" class="auth-submit-btn">Войти</button>
                     </div>
                 </form>
             </div>

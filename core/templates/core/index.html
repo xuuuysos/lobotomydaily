@@ -358,7 +358,7 @@
             <a href="/" class="logo-section">
                 <div class="logo-circle">
                     <img src="{% static 'core/logo.png' %}" alt="Logo"
-                        style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        style="width:100%; height:100%; object-fit:cover;">
                 </div>
                 <div class="logo-text">Lobotomy Daily</div>
                 <div class="collapse-btn">
@@ -468,31 +468,18 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <div class="action-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                        </svg>
+                    {% if request.user.is_authenticated %}
+                    <div class="user-profile-section">
+                        <a href="{% url 'profile' %}" class="user-avatar" style="border: none; background: none;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </a>
                     </div>
-                    <div class="action-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="action-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                    </div>
-                    <div class="user-avatar">
-                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User">
-                    </div>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="login-btn">Войти</a>
+                    {% endif %}
                 </div>
             </header>
 
@@ -529,8 +516,7 @@
                                     {% endfor %}
                                 </div>
                                 <span class="time-label">{{ article.parsed_at|time:"H:i" }}</span>
-                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{
-                                    article.title }}</div>
+                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title }}</div>
                             </div>
                             {% empty %}
                             <div class="list-item">

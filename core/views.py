@@ -27,10 +27,10 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('home')
+            return redirect('index')
     else:
         form = RegisterForm()
-    return render(request, "register.html", {"form": form})
+    return render(request, "core/register.html", {"form": form})
 
 def profile(request):
     user = request.user
@@ -44,6 +44,7 @@ from .models import News, Comment
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.management import call_command
 import datetime
 import json
 import urllib.request
@@ -80,6 +81,19 @@ def index(request):
             parsed_at__lt=target_end
         ).order_by('-parsed_at')
         
+        # Automatic parsing for today if empty
+        if i == 0 and not daily_news.exists():
+            try:
+                # Trigger quick parse for today (1 day, limit 10)
+                call_command('parse_news', days=1, limit=10, clear=False)
+                # Re-fetch
+                daily_news = News.objects.filter(
+                    parsed_at__gte=target_start,
+                    parsed_at__lt=target_end
+                ).order_by('-parsed_at')
+            except Exception:
+                pass
+
         days_data.append({
             'date': target_start,
             'news_list': daily_news,
