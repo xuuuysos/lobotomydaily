@@ -9,7 +9,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'core/style.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}?v=11">
     <style>
         .date-header span {
             transition: font-size 0.35s ease, color 0.35s ease;
@@ -26,6 +26,276 @@
             cursor: pointer;
             user-select: none;
             transition: background-color 0.2s, color 0.2s;
+        }
+
+        #tema-btn.active {
+            background-color: #1a2b88;
+            color: #fff;
+        }
+
+        #tema-btn.active svg {
+            stroke: rgba(255, 255, 255, 0.7);
+        }
+
+        .categories-panel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 0;
+            opacity: 0;
+            transition: max-width 0.4s ease, opacity 0.3s ease;
+            white-space: nowrap;
+            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .categories-panel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .categories-panel.open {
+            max-width: calc(100% - 140px);
+            opacity: 1;
+            margin-right: 15px;
+        }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a2b88;
+            background-color: #ebf0fe;
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
+            flex-shrink: 0;
+        }
+
+        .cat-chip:hover {
+            background-color: #d4ddfb;
+            transform: translateY(-1px);
+        }
+
+        .cat-chip.selected {
+            background-color: #1a2b88;
+            color: #fff;
+            border-color: #1a2b88;
+        }
+
+        .cat-chip svg {
+            flex-shrink: 0;
+        }
+
+        /* ── Category Feed ─────────────────────────── */
+        #category-feed {
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-grow: 1;
+            animation: feedIn 0.3s ease;
+        }
+
+        @keyframes feedIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #category-feed.visible {
+            display: flex;
+        }
+
+        .feed-header {
+            padding: 12px 20px 8px;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 2;
+        }
+
+        .feed-header-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a2b88;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .feed-count {
+            font-size: 11px;
+            color: #a0a0a0;
+        }
+
+        .feed-date-sep {
+            padding: 10px 30px 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #a0a0a0;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eaeaea;
+            position: sticky;
+            top: 45px;
+            z-index: 1;
+        }
+
+        .feed-item {
+            padding: 10px 20px;
+            border-bottom: 1px solid #eaeaea;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .feed-item:hover { background-color: #f5f7ff; }
+        .feed-item.active { background-color: #ebf0fe; }
+
+        .feed-item-time {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a2b88;
+            min-width: 36px;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .feed-item-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #111;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .feed-item-source {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-top: 3px;
+        }
+
+        .feed-loading {
+            padding: 40px 30px;
+            text-align: center;
+            color: #a0a0a0;
+            font-size: 13px;
+        }
+
+        .feed-loading svg {
+            animation: spin 1s linear infinite;
+            display: block;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feed-empty {
+            padding: 40px 30px;
+            text-align: center;
+            color: #bbb;
+            font-size: 13px;
+        }
+
+        /* ── List section header "Актуальное" ─── */
+        .list-section-header {
+            padding: 18px 30px 14px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            border-bottom: 2px solid #eaeaea;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 3;
+        }
+
+        .list-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111;
+            letter-spacing: -0.3px;
+        }
+
+        .list-section-sub {
+            font-size: 12px;
+            color: #a0a0a0;
+            font-weight: 400;
+        }
+
+        /* Hide widgets-header when feed is active */
+        #category-feed.visible ~ div #widgets-header,
+        .list-column:has(#category-feed.visible) #widgets-header {
+            display: none !important;
+        }
+
+        /* Tags styling */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tag-pill {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background-color: #f1f4ff;
+            color: #1a2b88;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(26, 43, 136, 0.1);
+            user-select: none;
+        }
+
+        .tag-pill:hover {
+            background-color: #1a2b88;
+            color: #fff;
+            border-color: #1a2b88;
+        }
+
+        .list-item {
+            position: relative;
+        }
+
+        .list-item-tags {
+            position: absolute;
+            top: 14px;
+            right: 30px;
+            display: flex;
+            gap: 4px;
+            max-width: 180px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .list-item-tags .tag-pill {
+            font-size: 8px;
+            padding: 1px 6px;
+            background-color: rgba(26, 43, 136, 0.04);
+            color: #1a2b88;
+            border-radius: 2px;
+            border: none;
         }
 
         #tema-btn.active {
@@ -258,117 +528,27 @@
             font-weight: 400;
         }
 
-        /* Hide widgets-header when feed is active */
-        #category-feed.visible~* .list-section-header,
-        .list-column:has(#category-feed.visible) #widgets-header {
-            display: none;
-        }
-
-        /* Tags styling */
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 15px;
-        }
-
-        .tag-pill {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 4px;
-            background-color: #f1f4ff;
-            color: #1a2b88;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(26, 43, 136, 0.1);
-            user-select: none;
-        }
-
-        .tag-pill:hover {
-            background-color: #1a2b88;
-            color: #fff;
-            border-color: #1a2b88;
-        }
-
-        .list-item {
-            position: relative;
-        }
-
-        .list-item-tags {
-            position: absolute;
-            top: 14px;
-            right: 30px;
-            display: flex;
-            gap: 4px;
-            max-width: 180px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .list-item-tags .tag-pill {
-            font-size: 8px;
-            padding: 1px 6px;
-            background-color: rgba(26, 43, 136, 0.04);
-            color: #1a2b88;
-            border-radius: 2px;
-            border: none;
-        }
-
-        /* Prevent overlap and limit lines */
-        .news-item-snippet,
-        .feed-item-body {
-            padding-right: 140px;
-        }
-
-        .news-item-snippet {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        /* Ensure topbar actions don't shrink */
-        .topbar-actions {
-            flex-shrink: 0;
-        }
-
-        .search-input {
-            flex-grow: 1;
-            border: none;
-            outline: none;
-            padding: 8px 0;
-            font-size: 14px;
-            font-family: inherit;
-            background: transparent;
-            color: #111;
-            min-width: 100px;
-        }
-
-        .search-input::placeholder {
-            color: #a0a0a0;
-        }
     </style>
 </head>
 
 <body>
     <div class="app-layout">
-        <aside class="sidebar">
-            <a href="/" class="logo-section">
-                <div class="logo-circle">
-                    <img src="{% static 'core/logo.png' %}" alt="Logo"
-                        style="width:100%; height:100%; object-fit:cover;">
-                </div>
-                <div class="logo-text">Lobotomy Daily</div>
-                <div class="collapse-btn">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo-section">
+                    <div class="logo-circle" style="width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; background-color: #fff !important; border-radius: 50% !important; overflow: hidden !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                        <img src="{% static 'core/logo.png' %}" alt="Logo" style="width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important;">
+                    </div>
+                    <div class="logo-text">Lobotomy Daily</div>
+                </a>
+                <div class="collapse-btn" onclick="toggleSidebar(event)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
                         <polyline points="11 18 5 12 11 6"></polyline>
                     </svg>
                 </div>
-            </a>
+            </div>
 
             <div class="sidebar-item" style="margin-top: 20px;">
                 <div class="checkbox-box filled"></div>
@@ -431,14 +611,6 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer">
-                <div class="venn-icon">
-                    <div class="v-circle c-cyan"></div>
-                    <div class="v-circle c-yellow"></div>
-                    <div class="v-circle c-red"></div>
-                </div>
-                <span class="footer-text">СОХРАНЕННЫЕ ФИЛЬТРЫ</span>
-            </div>
         </aside>
 
         <main class="main-area">
@@ -505,8 +677,8 @@
 
                         <div class="list-items">
                             {% for article in day.news_list %}
-                            <div class="list-item" style="cursor: pointer; transition: background-color 0.2s;"
-                                onclick="showArticle(this)" data-title="{{ article.title }}"
+                            <div class="list-item" onclick="showArticle(this)" 
+                                data-title="{{ article.title }}"
                                 data-time="{{ article.parsed_at|time:'H:i' }} {{ article.parsed_at|date:'j E Y'|lower }}"
                                 data-body="{{ article.body }}" data-url="{{ article.url }}"
                                 data-tags="{{ article.tags|join:',' }}">
@@ -516,7 +688,7 @@
                                     {% endfor %}
                                 </div>
                                 <span class="time-label">{{ article.parsed_at|time:"H:i" }}</span>
-                                <div class="news-item-snippet" style="margin-top: 5px; font-size: 13px; color: #555;">{{ article.title }}</div>
+                                <div class="news-item-snippet">{{ article.title }}</div>
                             </div>
                             {% empty %}
                             <div class="list-item">
@@ -959,6 +1131,13 @@
                     errorDiv.style.display = 'block';
                 });
         }
+
+        function toggleSidebar(event) {
+            if (event) event.stopPropagation();
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+    </script>
     </script>
 </body>
 

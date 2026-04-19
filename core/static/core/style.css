@@ -25,48 +25,118 @@ body {
     color: rgba(255, 255, 255, 0.9);
     display: flex;
     flex-direction: column;
-    padding-top: 20px;
     flex-shrink: 0;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 85px; /* Slightly wider */
+    margin-left: 0;
+    opacity: 1;
+}
+
+/* Mini-sidebar hide logic - ONLY Logo and Button remain */
+.sidebar.collapsed .sidebar-item,
+.sidebar.collapsed .sidebar-group,
+.sidebar.collapsed .sidebar-footer,
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .group-header,
+.sidebar.collapsed .period-controls,
+.sidebar.collapsed .genres-list {
+    display: none !important;
+}
+
+.sidebar.collapsed .sidebar-header {
+    padding: 20px 0 !important;
+    justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-item {
+    padding: 12px 0 !important;
+    justify-content: center !important;
+}
+
+.sidebar.collapsed .checkbox-box {
+    margin-right: 0 !important;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    padding: 20px 0 !important;
+    justify-content: center !important;
+}
+
+.sidebar.collapsed .venn-icon {
+    margin-right: 0 !important;
+}
+
+.sidebar.collapsed .logo-circle {
+    margin-right: 0 !important;
+}
+
+.sidebar.collapsed .collapse-btn {
+    position: relative !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-top: 10px !important;
+    order: 3 !important;
+}
+
+.sidebar.collapsed .collapse-btn svg {
+    transform: rotate(180deg) !important;
+}
+
+.sidebar.collapsed .logo-section {
+    gap: 0 !important;
+    flex-direction: column !important;
+}
+
+.sidebar-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 20px 0 20px 30px;
+    margin-bottom: 30px;
 }
 
 .logo-section {
     display: flex;
     align-items: center;
-    padding: 0 40px 0 30px;
-    margin-bottom: 30px;
-    position: relative;
+    gap: 16px;
     text-decoration: none;
 }
 
 .logo-circle {
-    width: 48px;
-    height: 48px;
-    background-color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #333;
-    margin-right: 15px;
-    padding: 2px;
-    overflow: hidden; /* Prevent logo from overflowing */
-    flex-shrink: 0;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    background-color: #fff !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
 }
 
 .logo-circle img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+    object-fit: contain !important;
 }
 
 .logo-text {
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #fff;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .collapse-btn {
@@ -76,7 +146,13 @@ body {
     transform: translateY(-50%);
     color: #8a9ac4;
     cursor: pointer;
+    transition: color 0.2s;
 }
+
+.collapse-btn:hover {
+    color: #fff;
+}
+
 
 .sidebar-item {
     display: flex;
@@ -213,10 +289,53 @@ body {
     border-bottom: 1px solid #eaeaea;
 }
 
+.menu-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.menu-toggle-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    display: none; /* Hidden by default, shown via JS when sidebar collapsed */
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.menu-toggle-btn:hover {
+    background-color: #f0f4f8;
+}
+
+.menu-toggle-btn svg {
+    display: block;
+}
+
 .search-area {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-grow: 1;
+}
+
+.search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 8px 0;
+    font-size: 14px;
+    font-family: inherit;
+    background: transparent;
+    color: #111;
+    min-width: 150px;
+}
+
+.search-input::placeholder {
+    color: #a0a0a0;
 }
 
 .search-tag {
@@ -363,9 +482,16 @@ body {
 }
 
 .list-item {
-    padding: 30px;
-    border-bottom: 1px solid #eaeaea;
+    padding: 25px 30px;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    background-color: #fff;
+}
+
+.list-item:hover {
+    background-color: #f8faff;
 }
 
 .time-label {
@@ -376,8 +502,9 @@ body {
 
 .reading-column {
     flex-grow: 1;
-    padding: 30px 40px;
+    padding: 60px 8% 80px 8%; /* More spacious reading area */
     overflow-y: auto;
+    background-color: #fff;
 }
 
 .reading-header {
@@ -401,18 +528,20 @@ body {
 
 .article-title {
     font-family: 'Inter', sans-serif;
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 36px;
+    font-weight: 700;
     margin-bottom: 30px;
     color: #111;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
 }
 
 .article-body {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #222;
-    max-width: 700px;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #333;
+    max-width: 760px;
 }
 
 .article-body p {
@@ -428,6 +557,17 @@ body {
 .article-body .quote {
     font-family: 'Playfair Display', serif;
     font-weight: 600;
+}
+
+.news-item-snippet {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* Accordion updates */
@@ -452,16 +592,6 @@ body {
 }
 .day-widget.open .chevron-icon {
     transform: rotate(180deg);
-}
-.list-item {
-    padding: 15px 30px;
-    border-top: 1px solid #eaeaea;
-    border-bottom: none;
-    background-color: #fafafa;
-    transition: background-color 0.2s;
-}
-.list-item:hover {
-    background-color: #f0f0f0;
 }
 
 /* Fluid adaptations for smaller screens */
