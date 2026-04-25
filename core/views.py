@@ -56,15 +56,20 @@ from .utils import ALL_TAGS, classify_news
 def generate_deterministic_tags(url, title="", body="", seed_id=None):
     return classify_news(title, body, url=url, news_id=seed_id)
 
-def get_top_tags(limit=5):
+def get_top_tags(limit=None):
     from collections import Counter
     all_news = News.objects.all()
     counter = Counter()
     for n in all_news:
-        counter.update(n.tags)
+        if n.tags:
+            counter.update(n.tags)
     
-    top = counter.most_common(limit)
-    return [tag for tag, count in top]
+    if limit:
+        top = counter.most_common(limit)
+        return [tag for tag, count in top]
+    
+    # Return all unique tags sorted alphabetically
+    return sorted(counter.keys())
 
 def index(request):
     now = timezone.localtime()
@@ -100,7 +105,7 @@ def index(request):
             'is_today': i == 0
         })
 
-    top_tags = get_top_tags(5)
+    top_tags = get_top_tags()
     return render(request, 'core/index.html', {
         'days_data': days_data,
         'top_tags': top_tags

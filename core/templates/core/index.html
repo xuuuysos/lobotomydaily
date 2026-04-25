@@ -429,70 +429,44 @@
             z-index: 1;
         }
 
-        .feed-item {
-            padding: 10px 20px;
-            border-bottom: 1px solid #eaeaea;
-            cursor: pointer;
-            transition: background-color 0.15s;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            position: relative;
-        }
-
-        .feed-item:hover {
-            background-color: #f5f7ff;
-        }
-
+        /* We use the standard .list-item class from style.css for both feeds */
         .feed-item.active {
             background-color: #ebf0fe;
         }
 
-        .feed-item-time {
-            font-size: 11px;
-            font-weight: 700;
-            color: #1a2b88;
-            min-width: 36px;
-            padding-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .feed-item-body {}
-
-        .feed-item-title {
-            font-size: 13px;
-            font-weight: 500;
-            color: #111;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .feed-item-source {
-            font-size: 11px;
-            color: #a0a0a0;
-            margin-top: 3px;
-        }
-
         .feed-loading {
-            padding: 40px 30px;
+            padding: 80px 30px;
             text-align: center;
-            color: #a0a0a0;
-            font-size: 13px;
+            color: #1a2b88;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.4s ease;
         }
 
-        .feed-loading svg {
-            animation: spin 1s linear infinite;
-            display: block;
-            margin: 0 auto 10px;
+        .loader-ring {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(26, 43, 136, 0.08);
+            border-top-color: #1a2b88;
+            border-left-color: #56ccf2;
+            border-radius: 50%;
+            animation: premiumSpin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(86, 204, 242, 0.15);
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        @keyframes premiumSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .feed-empty {
@@ -502,7 +476,127 @@
             font-size: 13px;
         }
 
-        /* ── List section header "Актуальное" ─── */
+        /* Premium Sidebar Groups */
+        .sidebar-group {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 25px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .group-header:hover {
+            color: #fff;
+        }
+
+        .group-header svg {
+            transition: transform 0.3s ease;
+            margin-right: 12px;
+            color: #56ccf2;
+        }
+
+        .group-header.open svg {
+            transform: rotate(180deg);
+        }
+
+        .genres-list, .period-controls {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .genres-list.open, .period-controls.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        /* Search inside categories */
+        .tag-search-container {
+            padding: 0 20px 10px;
+        }
+
+        .tag-search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .period-input {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .period-input:focus {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: #56ccf2;
+        }
+
+        /* Style for date picker icon on some browsers */
+        .period-input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .tag-search-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #56ccf2;
+        }
+
+        /* Sidebar item polish */
+        .sidebar-item {
+            padding: 10px 25px;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            padding-left: 30px;
+        }
+
+        .sidebar-item.selected {
+            background: rgba(86, 204, 242, 0.1);
+            border-left-color: #56ccf2;
+        }
+
+        .checkbox-box.filled {
+            transform: scale(1.1);
+            background-color: #56ccf2;
+            border-color: #56ccf2;
+            box-shadow: 0 0 12px rgba(86, 204, 242, 0.5);
+        }
+
+        .check-mark {
+            transition: opacity 0.2s ease;
+        }
+
+        /* ── List section header ─── */
         .list-section-header {
             padding: 18px 30px 14px;
             display: flex;
@@ -550,63 +644,43 @@
                 </div>
             </div>
 
-            <div class="sidebar-item" style="margin-top: 20px;">
-                <div class="checkbox-box filled"></div>
-                <span class="item-text">Срочные сообщения</span>
-                <svg class="lightning-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-            </div>
-
-            <div class="sidebar-group">
-                <div class="group-header">
+            <div class="sidebar-group" style="margin-top: 10px;">
+                <div class="group-header open" onclick="toggleSidebarGroup(this)">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="6 9 12 15 18 9"></polygon>
                     </svg>
                     <span>ПЕРИОД</span>
                 </div>
-                <div class="period-controls">
-                    <input type="text" class="period-input" value="от">
-                    <input type="text" class="period-input" value="до">
-                    <div class="period-hints">
-                        <span>0:00</span>
-                        <span>23:59</span>
-                    </div>
+                <div class="period-controls open" style="padding: 0 25px 15px;">
+                    <div style="margin-bottom: 5px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase;">ОТ</div>
+                    <input type="date" class="period-input" id="date-from">
+                    <div style="margin-bottom: 5px; margin-top: 10px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase;">ДО</div>
+                    <input type="date" class="period-input" id="date-to">
                 </div>
             </div>
 
-            <div class="sidebar-group">
-                <div class="group-header">
+            <div class="sidebar-group" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="group-header open" onclick="toggleSidebarGroup(this)">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="6 9 12 15 18 9"></polygon>
                     </svg>
-                    <span>ЖАНРЫ</span>
+                    <span>ТЕМЫ</span>
                 </div>
-                <div class="genres-list">
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                <div class="genres-list open" id="sidebar-topics" style="overflow-y: auto; flex-grow: 1; padding-bottom: 20px; display: flex; flex-direction: column;">
+                    <div class="tag-search-container">
+                        <input type="text" class="tag-search-input" placeholder="Поиск тем..." oninput="filterSidebarTags(this)">
                     </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <div class="checkbox-box"></div><span class="item-text">Срочные сообщения</span>
+                    <div id="tags-wrapper">
+                        {% for tag in top_tags %}
+                        <div class="sidebar-item topic-item" onclick="selectCatSidebar(this)" data-keywords="{{ tag|lower }}">
+                            <div class="checkbox-box" style="display: flex; align-items: center; justify-content: center;">
+                                <svg class="check-mark" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <span class="item-text">{{ tag }}</span>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -616,27 +690,8 @@
         <main class="main-area">
             <header class="topbar">
                 <div class="search-area" style="flex-grow:1;">
-                    <div id="tema-btn" class="search-tag" onclick="toggleCategories()">
-                        ТЕМА
-                        <svg id="tema-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                            style="transition:transform 0.3s ease;">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                    <div class="categories-panel" id="categories-panel">
-                        {% for tag in top_tags %}
-                        <div class="cat-chip" onclick="selectCat(this)" data-keywords="{{ tag|lower }}">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path
-                                    d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
-                                </path>
-                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                            </svg>
-                            {{ tag }}
-                        </div>
-                        {% endfor %}
+                    <div class="search-tag" style="background: transparent; color: #111; cursor: default; width: auto; gap: 4px; pointer-events: none;">
+                        ЛЕНТА НОВОСТЕЙ
                     </div>
                 </div>
                 <div class="topbar-actions">
@@ -781,22 +836,35 @@
         </main>
     </div>
     <script>
-        function toggleCategories() {
-            const btn = document.getElementById('tema-btn');
-            const panel = document.getElementById('categories-panel');
-            const arrow = document.getElementById('tema-arrow');
-            const isOpen = panel.classList.contains('open');
-            panel.classList.toggle('open');
-            btn.classList.toggle('active', !isOpen);
-            arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+        function toggleSidebarGroup(header) {
+            header.classList.toggle('open');
+            const list = header.nextElementSibling;
+            list.classList.toggle('open');
         }
 
-        function selectCat(chip) {
-            chip.classList.toggle('selected');
+        function filterSidebarTags(input) {
+            const query = input.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.topic-item');
+            items.forEach(item => {
+                const text = item.querySelector('.item-text').textContent.toLowerCase();
+                item.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function selectCatSidebar(el) {
+            el.classList.toggle('selected');
+            const checkbox = el.querySelector('.checkbox-box');
+            const checkIcon = el.querySelector('.check-mark');
+            if (checkbox) {
+                const isSelected = el.classList.contains('selected');
+                checkbox.classList.toggle('filled', isSelected);
+                if (checkIcon) {
+                    checkIcon.style.display = isSelected ? 'block' : 'none';
+                }
+            }
             applyFilter();
         }
 
-        // Collect ISO dates from day-widgets
         function getWidgetDates() {
             const dates = [];
             document.querySelectorAll('.day-widget[data-date]').forEach(w => {
@@ -806,11 +874,11 @@
         }
 
         function applyFilter() {
-            const selectedChips = document.querySelectorAll('.cat-chip.selected');
+            const selectedItems = document.querySelectorAll('.topic-item.selected');
             const widgets = document.querySelectorAll('.day-widget');
             const feed = document.getElementById('category-feed');
 
-            if (selectedChips.length === 0) {
+            if (selectedItems.length === 0) {
                 // Restore widgets, hide feed
                 widgets.forEach(w => { w.style.display = ''; });
                 document.querySelectorAll('.list-item').forEach(el => { el.style.display = ''; });
@@ -826,9 +894,9 @@
 
             // Collect selected categories and their keywords
             const categoryData = [];
-            selectedChips.forEach(chip => {
-                const label = chip.textContent.trim();
-                const keywords = (chip.dataset.keywords || '').split(',').map(k => k.trim().toLowerCase());
+            selectedItems.forEach(item => {
+                const label = item.querySelector('.item-text').textContent.trim();
+                const keywords = (item.dataset.keywords || '').split(',').map(k => k.trim().toLowerCase());
                 if (label) {
                     categoryData.push({ label, keywords });
                 }
@@ -842,10 +910,8 @@
             const feedBody = document.getElementById('feed-body');
             feedBody.innerHTML = `
                 <div class="feed-loading">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2b88" stroke-width="2.5">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                    </svg>
-                    Загружаем новости…
+                    <div class="loader-ring"></div>
+                    <span style="opacity: 0.7;">Подбираем лучшие материалы…</span>
                 </div>`;
 
             const dates = getWidgetDates();
@@ -894,20 +960,17 @@
                     const tags = art.tags || [];
                     const tagsHtml = tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
                     html += `
-                        <div class="feed-item" onclick="showFeedArticle(this)"
+                        <div class="list-item" onclick="showFeedArticle(this)" 
                              data-title="${safeTitle}"
-                             data-time="${art.time} · ${formatDate(dateStr)}"
+                             data-time="${art.time} ${formatDate(dateStr)}"
                              data-body=""
                              data-url="${art.url}"
                              data-tags="${tags.join(',')}">
                             <div class="list-item-tags">
                                 ${tagsHtml}
                             </div>
-                            <span class="feed-item-time">${art.time}</span>
-                            <div class="feed-item-body">
-                                <div class="feed-item-title">${art.title}</div>
-                                <div class="feed-item-source">Lenta.ru</div>
-                            </div>
+                            <span class="time-label">${art.time}</span>
+                            <div class="news-item-snippet">${art.title}</div>
                         </div>`;
                 });
             });
@@ -974,35 +1037,26 @@
         }
 
 
+        // Live search filter
         function liveSearch() {
-            const query = document.getElementById('news-search').value.toLowerCase().trim();
+            const query = (document.getElementById('news-search')?.value || '').toLowerCase().trim();
             const listItems = document.querySelectorAll('.list-item');
             const feedItems = document.querySelectorAll('.feed-item');
-
-            // Filter list items (accordion)
+            
+            if (!query) {
+                listItems.forEach(item => { item.style.display = ''; });
+                feedItems.forEach(item => { item.style.display = ''; });
+                return;
+            }
             listItems.forEach(item => {
                 const tags = (item.getAttribute('data-tags') || '').toLowerCase();
                 item.style.display = tags.includes(query) ? '' : 'none';
             });
-
-            // Filter feed items (categories)
             feedItems.forEach(item => {
                 const tags = (item.getAttribute('data-tags') || '').toLowerCase();
                 item.style.display = tags.includes(query) ? '' : 'none';
             });
         }
-
-        // Close panel on outside click
-        document.addEventListener('click', function (e) {
-            const btn = document.getElementById('tema-btn');
-            const panel = document.getElementById('categories-panel');
-            const arrow = document.getElementById('tema-arrow');
-            if (!btn.contains(e.target) && !panel.contains(e.target)) {
-                panel.classList.remove('open');
-                btn.classList.remove('active');
-                arrow.style.transform = '';
-            }
-        });
 
         function toggleWidget(element) {
             const widget = element.parentElement;
