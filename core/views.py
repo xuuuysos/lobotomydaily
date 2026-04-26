@@ -72,13 +72,38 @@ def get_top_tags(limit=None):
     return sorted(counter.keys())
 
 def index(request):
+    from_str = request.GET.get('from')
+    to_str = request.GET.get('to')
+    
     now = timezone.localtime()
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
+    num_days = 7
+    start_point_date = start_of_today.date()
+
+    if from_str and to_str:
+        try:
+            d_from = datetime.datetime.strptime(from_str, '%Y-%m-%d').date()
+            d_to = datetime.datetime.strptime(to_str, '%Y-%m-%d').date()
+            
+            if d_from > d_to:
+                d_from, d_to = d_to, d_from
+            
+            delta = (d_to - d_from).days
+            if delta > 14:
+                delta = 14
+                d_to = d_from + datetime.timedelta(days=14)
+            
+            num_days = delta + 1
+            start_point_date = d_to
+        except ValueError:
+            pass
+
     days_data = []
     
-    for i in range(7):
-        target_start = start_of_today - datetime.timedelta(days=i)
+    for i in range(num_days):
+        target_date = start_point_date - datetime.timedelta(days=i)
+        target_start = timezone.make_aware(datetime.datetime.combine(target_date, datetime.time.min))
         target_end = target_start + datetime.timedelta(days=1)
         
         daily_news = News.objects.filter(
@@ -86,12 +111,10 @@ def index(request):
             parsed_at__lt=target_end
         ).order_by('-parsed_at')
         
-        # Automatic parsing for today if empty
-        if i == 0 and not daily_news.exists():
+        # Automatic parsing for today if empty and it's actually today
+        if target_date == start_of_today.date() and not daily_news.exists():
             try:
-                # Trigger quick parse for today (1 day, limit 10)
                 call_command('parse_news', days=1, limit=10, clear=False)
-                # Re-fetch
                 daily_news = News.objects.filter(
                     parsed_at__gte=target_start,
                     parsed_at__lt=target_end
@@ -102,13 +125,15 @@ def index(request):
         days_data.append({
             'date': target_start,
             'news_list': daily_news,
-            'is_today': i == 0
+            'is_today': target_date == start_of_today.date()
         })
 
     top_tags = get_top_tags()
     return render(request, 'core/index.html', {
         'days_data': days_data,
-        'top_tags': top_tags
+        'top_tags': top_tags,
+        'from_date': from_str,
+        'to_date': to_str
     })
 
 
@@ -145,10 +170,9 @@ def _get_date_archive_html(date_obj):
     return _date_html_cache.get(key, '')
 
 
-def _parse_lenta_category_day(category_label, keywords, date_obj):
+def _parse_lenta_day_filtered(date_obj, include_labels, exclude_labels):
     """
-    Parse lenta.ru/YYYY/MM/DD/ and filter articles by keywords in title
-    or by matching category path in URL.
+    Parse lenta.ru/YYYY/MM/DD/ and filter articles by included/excluded tags.
     """
     y, m, d = date_obj.year, date_obj.month, date_obj.day
     html = _get_date_archive_html(date_obj)
@@ -156,20 +180,20 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
         return []
 
     soup = BeautifulSoup(html, 'lxml')
-    section_paths = LENTA_SECTION_PATHS.get(category_label, [])
     date_seg = f'{y}/{m:02d}/{d:02d}/'
 
     articles = []
     seen = set()
 
+    # Pre-calculate set for speed
+    include_set = set(include_labels) if include_labels else set()
+    exclude_set = set(exclude_labels) if exclude_labels else set()
+
     for a in soup.find_all('a', href=True):
         href = a['href']
-
         if date_seg not in href:
             continue
-        href_lower = href.lower()
-        in_section_url = any(f'/{p}/' in href_lower for p in section_paths)
-
+            
         full_url = 'https://lenta.ru' + href if href.startswith('/') else href
         if full_url in seen:
             continue
@@ -179,17 +203,21 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
         title = re.sub(r'\s+', ' ', raw).strip()
         title = re.sub(r'\d{2}:\d{2}.*$', '', title).strip()
 
-
         if not title or len(title) < 20 or len(title.split()) < 3:
             continue
 
-        # 2. Check if it matches the rubric by URL OR by keywords in Title
-        title_lower = title.lower()
-        matches_keywords = any(kw in title_lower for kw in keywords)
-
-        # Tag-based filtering: Check if the selected category is in the article's generated tags
+        # Tag-based filtering
         article_tags = generate_deterministic_tags(full_url, title=title)
-        if category_label not in article_tags:
+        tags_set = set(article_tags)
+
+        # Logic: 
+        # 1. If include_set is not empty, must have at least one common tag.
+        # 2. If exclude_set is not empty, must have NO common tags.
+        
+        matches_include = not include_set or not include_set.isdisjoint(tags_set)
+        matches_exclude = not exclude_set or exclude_set.isdisjoint(tags_set)
+
+        if not (matches_include and matches_exclude):
             continue
 
         seen.add(full_url)
@@ -205,10 +233,10 @@ def _parse_lenta_category_day(category_label, keywords, date_obj):
             'title': title,
             'url': full_url,
             'time': time_str or f'{d:02d}.{m:02d}',
-            'tags': generate_deterministic_tags(full_url, title=title),
+            'tags': article_tags,
         })
 
-        if len(articles) >= 20:
+        if len(articles) >= 30:
             break
 
     return articles
@@ -275,8 +303,9 @@ def fetch_category_news(request):
     except Exception:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    category_data = body.get('categoryData', []) 
-    date_strs  = body.get('dates', [])
+    included_tags = body.get('includedTags', [])
+    excluded_tags = body.get('excludedTags', [])
+    date_strs = body.get('dates', [])
 
     results = {}
 
@@ -286,23 +315,8 @@ def fetch_category_news(request):
         except ValueError:
             continue
 
-        day_articles = []
-        seen_urls = set()
-
-        for cat_info in category_data:
-            label = cat_info.get('label')
-            keywords = cat_info.get('keywords', [])
-            
-            arts = _parse_lenta_category_day(label, keywords, date_obj)
-            for art in arts:
-                if art['url'] not in seen_urls:
-                    seen_urls.add(art['url'])
-                    day_articles.append(art)
-                    if len(day_articles) >= 25:
-                        break
-            if len(day_articles) >= 25:
-                break
-
+        # Parse with combined inclusive/exclusive logic
+        day_articles = _parse_lenta_day_filtered(date_obj, included_tags, excluded_tags)
         results[date_str] = day_articles
 
     return JsonResponse({'results': results})

@@ -568,22 +568,82 @@
             border-color: #56ccf2;
         }
 
-        /* Sidebar item polish */
         .sidebar-item {
-            padding: 10px 25px;
+            padding: 10px 20px 10px 25px;
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
         }
 
         .sidebar-item:hover {
             background: rgba(255, 255, 255, 0.05);
-            padding-left: 30px;
         }
 
-        .sidebar-item.selected {
+        .sidebar-item.include {
             background: rgba(86, 204, 242, 0.1);
             border-left-color: #56ccf2;
         }
+        
+        .sidebar-item.include .item-text {
+            color: #56ccf2;
+            font-weight: 600;
+        }
+
+        .sidebar-item.exclude {
+            background: rgba(255, 71, 87, 0.1);
+            border-left-color: #ff4757;
+        }
+        
+        .sidebar-item.exclude .item-text {
+            color: #ff4757;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .topic-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar-item:hover .topic-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.btn-plus:hover {
+            background: #56ccf2;
+        }
+
+        .action-btn.btn-minus:hover {
+            background: #ff4757;
+        }
+        
+        .action-btn.active.btn-plus { background: #56ccf2; }
+        .action-btn.active.btn-minus { background: #ff4757; }
 
         .checkbox-box.filled {
             transform: scale(1.1);
@@ -653,9 +713,9 @@
                 </div>
                 <div class="period-controls open" style="padding: 0 25px 15px;">
                     <div style="margin-bottom: 5px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase;">ОТ</div>
-                    <input type="date" class="period-input" id="date-from">
+                    <input type="date" class="period-input" id="date-from" onchange="handleDateChange()" value="{{ from_date|default:'' }}">
                     <div style="margin-bottom: 5px; margin-top: 10px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase;">ДО</div>
-                    <input type="date" class="period-input" id="date-to">
+                    <input type="date" class="period-input" id="date-to" onchange="handleDateChange()" value="{{ to_date|default:'' }}">
                 </div>
             </div>
 
@@ -672,13 +732,21 @@
                     </div>
                     <div id="tags-wrapper">
                         {% for tag in top_tags %}
-                        <div class="sidebar-item topic-item" onclick="selectCatSidebar(this)" data-keywords="{{ tag|lower }}">
-                            <div class="checkbox-box" style="display: flex; align-items: center; justify-content: center;">
-                                <svg class="check-mark" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
+                        <div class="sidebar-item topic-item" data-tag="{{ tag }}" data-mode="none" onclick="toggleTopic(this, 'include')">
                             <span class="item-text">{{ tag }}</span>
+                            <div class="topic-actions">
+                                <button class="action-btn btn-plus" title="Показывать" onclick="event.stopPropagation(); setTopicMode(this.parentElement.parentElement, 'include')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                </button>
+                                <button class="action-btn btn-minus" title="Скрывать" onclick="event.stopPropagation(); setTopicMode(this.parentElement.parentElement, 'exclude')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
@@ -691,7 +759,6 @@
             <header class="topbar">
                 <div class="search-area" style="flex-grow:1;">
                     <div class="search-tag" style="background: transparent; color: #111; cursor: default; width: auto; gap: 4px; pointer-events: none;">
-                        ЛЕНТА НОВОСТЕЙ
                     </div>
                 </div>
                 <div class="topbar-actions">
@@ -851,18 +918,43 @@
             });
         }
 
-        function selectCatSidebar(el) {
-            el.classList.toggle('selected');
-            const checkbox = el.querySelector('.checkbox-box');
-            const checkIcon = el.querySelector('.check-mark');
-            if (checkbox) {
-                const isSelected = el.classList.contains('selected');
-                checkbox.classList.toggle('filled', isSelected);
-                if (checkIcon) {
-                    checkIcon.style.display = isSelected ? 'block' : 'none';
-                }
-            }
+        function setTopicMode(el, mode) {
+            const currentMode = el.dataset.mode;
+            // If clicking the same mode, toggle to none
+            const newMode = (currentMode === mode) ? 'none' : mode;
+            
+            el.dataset.mode = newMode;
+            el.classList.remove('include', 'exclude');
+            if (newMode !== 'none') el.classList.add(newMode);
+            
+            // Update button active state
+            el.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
+            if (newMode === 'include') el.querySelector('.btn-plus').classList.add('active');
+            if (newMode === 'exclude') el.querySelector('.btn-minus').classList.add('active');
+
             applyFilter();
+        }
+
+        function toggleTopic(el, mode) {
+            // Main click toggles 'include' or 'none'
+            setTopicMode(el, mode);
+        }
+
+        function handleDateChange() {
+            const from = document.getElementById('date-from').value;
+            const to = document.getElementById('date-to').value;
+            
+            const hasActiveTags = document.querySelectorAll('.topic-item[data-mode="include"], .topic-item[data-mode="exclude"]').length > 0;
+            
+            if (hasActiveTags) {
+                applyFilter();
+            } else if (from && to) {
+                // Navigate to same page with params to update server-side widgets
+                const url = new URL(window.location.href);
+                url.searchParams.set('from', from);
+                url.searchParams.set('to', to);
+                window.location.href = url.toString();
+            }
         }
 
         function getWidgetDates() {
@@ -873,37 +965,63 @@
             return dates;
         }
 
+        function getFilterDates() {
+            const from = document.getElementById('date-from').value;
+            const to = document.getElementById('date-to').value;
+            if (from && to) {
+                const dates = [];
+                let curr = new Date(from);
+                let last = new Date(to);
+                if (curr > last) { let t = curr; curr = last; last = t; }
+                
+                // Limit to 14 days
+                const limitDate = new Date(curr);
+                limitDate.setDate(limitDate.getDate() + 14);
+                if (last > limitDate) last = limitDate;
+
+                let temp = new Date(curr);
+                while (temp <= last) {
+                    dates.push(temp.toISOString().split('T')[0]);
+                    temp.setDate(temp.getDate() + 1);
+                }
+                return dates.reverse(); // Newest first
+            }
+            return getWidgetDates();
+        }
+
         function applyFilter() {
-            const selectedItems = document.querySelectorAll('.topic-item.selected');
+            const includedTags = [];
+            const excludedTags = [];
+            document.querySelectorAll('.topic-item').forEach(item => {
+                const mode = item.dataset.mode;
+                const tag = item.dataset.tag;
+                if (mode === 'include') includedTags.push(tag);
+                else if (mode === 'exclude') excludedTags.push(tag);
+            });
+
             const widgets = document.querySelectorAll('.day-widget');
             const feed = document.getElementById('category-feed');
+            const widgetsHeader = document.getElementById('widgets-header');
 
-            if (selectedItems.length === 0) {
+            if (includedTags.length === 0 && excludedTags.length === 0) {
                 // Restore widgets, hide feed
                 widgets.forEach(w => { w.style.display = ''; });
                 document.querySelectorAll('.list-item').forEach(el => { el.style.display = ''; });
                 feed.classList.remove('visible');
-                document.getElementById('widgets-header').style.display = '';
+                if (widgetsHeader) widgetsHeader.style.display = '';
                 return;
             }
 
             // Switch to feed mode: hide widgets and header, show feed
             widgets.forEach(w => { w.style.display = 'none'; });
-            document.getElementById('widgets-header').style.display = 'none';
+            if (widgetsHeader) widgetsHeader.style.display = 'none';
             feed.classList.add('visible');
 
-            // Collect selected categories and their keywords
-            const categoryData = [];
-            selectedItems.forEach(item => {
-                const label = item.querySelector('.item-text').textContent.trim();
-                const keywords = (item.dataset.keywords || '').split(',').map(k => k.trim().toLowerCase());
-                if (label) {
-                    categoryData.push({ label, keywords });
-                }
-            });
-
             // Update header title
-            document.getElementById('feed-title').textContent = categoryData.map(c => c.label).join(' · ');
+            const titleParts = [];
+            if (includedTags.length > 0) titleParts.push('Показать: ' + includedTags.join(', '));
+            if (excludedTags.length > 0) titleParts.push('Скрыть: ' + excludedTags.join(', '));
+            document.getElementById('feed-title').textContent = titleParts.join(' | ') || 'Лента';
             document.getElementById('feed-count').textContent = '';
 
             // Show loader
@@ -911,15 +1029,15 @@
             feedBody.innerHTML = `
                 <div class="feed-loading">
                     <div class="loader-ring"></div>
-                    <span style="opacity: 0.7;">Подбираем лучшие материалы…</span>
+                    <span style="opacity: 0.7;">Подбираем тематические новости…</span>
                 </div>`;
 
-            const dates = getWidgetDates();
+            const dates = getFilterDates();
 
             fetch('/api/category-news/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryData, dates })
+                body: JSON.stringify({ includedTags, excludedTags, dates })
             })
                 .then(r => r.json())
                 .then(data => {
