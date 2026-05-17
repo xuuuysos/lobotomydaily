@@ -17,7 +17,7 @@ class News(models.Model):
         return classify_news(self.title, self.body, url=self.url, news_id=self.id)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'news'
 
 class NewsAITags(models.Model):
