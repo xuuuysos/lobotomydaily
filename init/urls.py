@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/article-body/', core.views.fetch_article_body, name='fetch_article_body'),
     path('api/comments/get/', core.views.get_comments, name='get_comments'),
     path('api/comments/add/', core.views.add_comment, name='add_comment'),
+    path('api/ai-chat/', core.views.send_ai_message, name='send_ai_message'),
+    path('api/ai-chat/clear/', core.views.clear_ai_chat, name='clear_ai_chat'),
 ]

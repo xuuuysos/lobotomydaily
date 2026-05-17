@@ -20,6 +20,14 @@ class News(models.Model):
         managed = False
         db_table = 'news'
 
+class NewsAITags(models.Model):
+    news_url = models.URLField(unique=True)
+    tags_json = models.TextField() # Stores JSON list of tags
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'news_ai_tags'
+
 class Comment(models.Model):
     news_url = models.URLField(db_index=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)

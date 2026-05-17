@@ -51,19 +51,31 @@ import urllib.request
 import re
 from bs4 import BeautifulSoup
 import hashlib
-from .utils import ALL_TAGS, classify_news
+from .utils import classify_news
+from .ai_utils import ai_get_chat_response
 
 def generate_deterministic_tags(url, title="", body="", seed_id=None):
     return classify_news(title, body, url=url, news_id=seed_id)
 
 def get_top_tags(limit=None):
     from collections import Counter
-    all_news = News.objects.all()
-    counter = Counter()
-    for n in all_news:
-        if n.tags:
-            counter.update(n.tags)
+    from .models import NewsAITags, News
+    from .utils import clean_and_deduplicate_tags
+    import json
     
+    counter = Counter()
+    # Get active URLs of existing news to avoid displaying empty/orphan tags
+    active_urls = set(News.objects.values_list('url', flat=True))
+    
+    # Read directly from cache table for active news to avoid N+1 and model instantiation overhead
+    for cached in NewsAITags.objects.filter(news_url__in=active_urls):
+        try:
+            tags = json.loads(cached.tags_json)
+            cleaned = clean_and_deduplicate_tags(tags)
+            counter.update(cleaned)
+        except Exception:
+            pass
+            
     if limit:
         top = counter.most_common(limit)
         return [tag for tag, count in top]
@@ -111,22 +123,23 @@ def index(request):
             parsed_at__lt=target_end
         ).order_by('-parsed_at')
         
-        # Automatic parsing for today if empty and it's actually today
-        if target_date == start_of_today.date() and not daily_news.exists():
-            try:
-                call_command('parse_news', days=1, limit=10, clear=False)
-                daily_news = News.objects.filter(
-                    parsed_at__gte=target_start,
-                    parsed_at__lt=target_end
-                ).order_by('-parsed_at')
-            except Exception:
-                pass
+        # Page loads instantly without waiting for parsing to finish
 
         days_data.append({
             'date': target_start,
             'news_list': daily_news,
             'is_today': target_date == start_of_today.date()
         })
+
+    # Pre-evaluate tags (using fast offline fallback if uncached) to populate NewsAITags database before get_top_tags()
+    for day in days_data:
+        for n in day['news_list']:
+            _ = n.tags
+
+
+
+
+
 
     top_tags = get_top_tags()
     return render(request, 'core/index.html', {
@@ -375,3 +388,55 @@ def add_comment(request):
             'created_at': comment.created_at.strftime('%d.%m.%Y %H:%M')
         }
     })
+
+@csrf_exempt
+def send_ai_message(request):
+    """
+    Sends a message to the AI news assistant.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    user_message = data.get('message', '').strip()
+    if not user_message:
+        return JsonResponse({'status': 'error', 'message': 'Сообщение не может быть пустым'}, status=400)
+
+    # Get history from session
+    messages = request.session.get('ai_messages', [])
+    
+    # Limit history to avoid huge sessions
+    if len(messages) > 10:
+        messages = messages[-10:]
+
+    # Add user message
+    messages.append({'role': 'user', 'content': user_message})
+
+    # Get some recent news for context
+    recent_news = News.objects.order_by('-parsed_at')[:20]
+
+    # Get AI response
+    ai_response = ai_get_chat_response(messages, recent_news)
+
+    # Add AI response to history
+    messages.append({'role': 'assistant', 'content': ai_response})
+    
+    # Save back to session
+    request.session['ai_messages'] = messages
+
+    return JsonResponse({
+        'status': 'success',
+        'ai_response': ai_response,
+        'user_message': user_message,
+        'timestamp': timezone.localtime().strftime("%H:%M")
+    })
+
+@csrf_exempt
+def clear_ai_chat(request):
+    if 'ai_messages' in request.session:
+        del request.session['ai_messages']
+    return JsonResponse({'status': 'success'})

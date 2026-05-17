@@ -682,6 +682,135 @@
             font-weight: 400;
         }
 
+        /* ── AI Chat Widget ──────────────────────── */
+        .ai-chat-launcher {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: #1a2b88;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ai-chat-launcher:hover {
+            transform: scale(1.1);
+            background: #213589;
+        }
+
+        .ai-chat-container {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 360px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1001;
+            border: 1px solid #eaeaea;
+            animation: chatIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes chatIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .ai-chat-header {
+            padding: 15px 20px;
+            background: #1a2b88;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ai-chat-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8faff;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .msg-user {
+            align-self: flex-end;
+            background: #1a2b88;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-ai {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #eaeaea;
+            border-bottom-left-radius: 2px;
+        }
+
+        .ai-chat-input-area {
+            padding: 15px;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+
+        .ai-chat-input {
+            flex-grow: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .ai-chat-send {
+            background: #1a2b88;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .ai-status {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+        }
+
     </style>
 </head>
 
@@ -974,20 +1103,26 @@
                 let last = new Date(to);
                 if (curr > last) { let t = curr; curr = last; last = t; }
                 
-                // Limit to 14 days
-                const limitDate = new Date(curr);
-                limitDate.setDate(limitDate.getDate() + 14);
-                if (last > limitDate) last = limitDate;
-
                 let temp = new Date(curr);
                 while (temp <= last) {
                     dates.push(temp.toISOString().split('T')[0]);
                     temp.setDate(temp.getDate() + 1);
                 }
-                return dates.reverse(); // Newest first
+                return dates.reverse();
             }
             return getWidgetDates();
         }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('from') || urlParams.has('to')) {
+                if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+                    window.location.href = window.location.pathname;
+                }
+            }
+        }
+
+        let currentIncludedTags = [];
 
         function applyFilter() {
             const includedTags = [];
@@ -1309,7 +1444,62 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
         }
-    </script>
+
+        function toggleAIChat() {
+            const chat = document.getElementById('ai-chat');
+            const isVisible = chat.style.display === 'flex';
+            chat.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) {
+                document.getElementById('ai-chat-input').focus();
+            }
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const list = document.getElementById('ai-messages-list');
+            
+            // Add user message to UI
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-msg msg-user';
+            userMsgDiv.textContent = message;
+            list.appendChild(userMsgDiv);
+            
+            input.value = '';
+            list.scrollTop = list.scrollHeight;
+
+            // Show typing status
+            const status = document.getElementById('ai-status');
+            status.textContent = 'Typing...';
+
+            fetch('/api/ai-chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(r => r.json())
+            .then(data => {
+                status.textContent = 'Online';
+                if (data.status === 'success') {
+                    const aiMsgDiv = document.createElement('div');
+                    aiMsgDiv.className = 'chat-msg msg-ai';
+                    aiMsgDiv.innerHTML = data.ai_response.replace(/\n/g, '<br>');
+                    list.appendChild(aiMsgDiv);
+                    list.scrollTop = list.scrollHeight;
+                } else {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'chat-msg msg-ai';
+                    errorDiv.style.color = 'red';
+                    errorDiv.textContent = 'Ошибка: ' + (data.message || 'Не удалось получить ответ');
+                    list.appendChild(errorDiv);
+                }
+            })
+            .catch(() => {
+                status.textContent = 'Offline';
+            });
+        }
     </script>
 </body>
 
