@@ -1,7 +1,12 @@
+"""
+Application configuration and background scheduler.
+"""
+
 import os
 import threading
 import time
 from django.apps import AppConfig
+
 
 class CoreConfig(AppConfig):
     name = 'core'

@@ -1,3 +1,7 @@
+"""
+AI classification and news refinement utilities.
+"""
+
 import os
 import json
 import re
@@ -89,50 +93,6 @@ def ai_classify_news(title, body, all_tags):
             print("\n[AI Circuit Breaker] 3 consecutive failures. Disabling AI requests to prevent parsing lag!\n")
         return []
 
-def ai_get_chat_response(messages, available_news):
-    """
-    Handles the news assistant chat.
-    """
-    if not client:
-        return "Извините, AI помощник сейчас недоступен (API ключ не настроен)."
-
-    system_msg = {
-        "role": "system",
-        "content": (
-            "You are a professional AI news assistant for 'Lobotomy Daily'. "
-            "You help users find interesting news and summarize what's happening. "
-            "Current news menu (JSON with titles and URLs) is provided below. "
-            "Always be polite, helpful, and concise (less than 50 words per response). "
-            "If the user asks for news, recommend specific ones from the provided list. "
-            "Answer in Russian without formatting except for links."
-        )
-    }
-
-    # Format news context
-    news_context = []
-    for n in available_news:
-        news_context.append({
-            "title": n.title,
-            "url": n.url,
-            "source": n.source,
-            "date": n.parsed_at.strftime("%d.%m")
-        })
-
-    context_msg = {
-        "role": "system",
-        "content": f"Available News: {json.dumps(news_context, ensure_ascii=False)}"
-    }
-
-    full_messages = [system_msg, context_msg] + messages
-
-    try:
-        response = client.chat.completions.create(
-            model="openrouter/free",
-            messages=full_messages
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Произошла ошибка при обращении к AI: {str(e)}"
 
 def ai_process_article(raw_title, raw_body):
     """

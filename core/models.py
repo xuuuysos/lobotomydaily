@@ -1,7 +1,12 @@
+# pylint: disable=no-member
+"""
+Database models for the core application of Lobotomy Daily.
+"""
+
+import sys
 from django.db import models
 from django.contrib.auth.models import User
 
-# Create your models here.
 
 class News(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -17,16 +22,18 @@ class News(models.Model):
         return classify_news(self.title, self.body, url=self.url, news_id=self.id)
 
     class Meta:
-        managed = False
+        managed = 'test' in sys.argv
         db_table = 'news'
+
 
 class NewsAITags(models.Model):
     news_url = models.URLField(unique=True)
-    tags_json = models.TextField() # Stores JSON list of tags
+    tags_json = models.TextField()  # Stores JSON list of tags
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'news_ai_tags'
+
 
 class Comment(models.Model):
     news_url = models.URLField(db_index=True)

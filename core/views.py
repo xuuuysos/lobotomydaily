@@ -1,10 +1,43 @@
-from .forms import RegisterForm
-from django.shortcuts import render, redirect
+# pylint: disable=no-member
+"""
+Views for the core application of Lobotomy Daily.
+"""
+
+from collections import Counter
+import datetime
+import json
+import re
+import urllib.request
+from bs4 import BeautifulSoup
+
 from django.contrib.auth import login
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+from .forms import RegisterForm
+from .models import News, Comment, NewsAITags
+from .utils import classify_news, clean_and_deduplicate_tags
+
+
+LENTA_SECTION_PATHS = {
+    'Политика':   ['russia', 'world', 'ussr'],
+    'Спорт':      ['sport'],
+    'Экономика':  ['economics', 'finance', 'realty', 'business'],
+    'Технологии': ['internet', 'innovation'],
+    'Культура':   ['culture', 'entertainment', 'kino', 'music'],
+    'Наука':      ['science', 'space'],
+    'Общество':   ['society', 'human_rights', 'life'],
+    'Регионы':    ['russia', 'siberia', 'ural'],
+}
+
+_date_html_cache = {}
+
 
 def get_general_context(request):
     """
-    Создает общий контекст
+    Создает общий контекст для страниц.
     """
     context = {
         'user': request.user,
@@ -21,7 +54,11 @@ def get_general_context(request):
         context['menu'].append(['Registration', '/accounts/register'])
     return context
 
+
 def register(request):
+    """
+    Регистрация нового пользователя.
+    """
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
@@ -32,7 +69,11 @@ def register(request):
         form = RegisterForm()
     return render(request, "core/register.html", {"form": form})
 
+
 def profile(request):
+    """
+    Страница профиля пользователя.
+    """
     user = request.user
     context = {
         'user': user
@@ -40,30 +81,20 @@ def profile(request):
     context.update(get_general_context(request))
     return render(request, "profile.html", context)
 
-from .models import News, Comment
-from django.utils import timezone
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.management import call_command
-import datetime
-import json
-import urllib.request
-import re
-from bs4 import BeautifulSoup
-import hashlib
-from .utils import classify_news
-from .ai_utils import ai_get_chat_response
 
 def generate_deterministic_tags(url, title="", body="", seed_id=None):
+    """
+    Генерирует детерминированные теги для новости.
+    """
     return classify_news(title, body, url=url, news_id=seed_id)
 
+
 def get_top_tags(limit=None):
-    from collections import Counter
-    from .models import NewsAITags, News
-    from .utils import clean_and_deduplicate_tags
-    import json
-    
+    """
+    Возвращает топ тегов из кэша NewsAITags.
+    """
     counter = Counter()
+
     # Get active URLs of existing news to avoid displaying empty/orphan tags
     active_urls = set(News.objects.values_list('url', flat=True))
     
@@ -83,7 +114,11 @@ def get_top_tags(limit=None):
     # Return all unique tags sorted alphabetically
     return sorted(counter.keys())
 
+
 def index(request):
+    """
+    Главная страница со списком новостей за последние несколько дней.
+    """
     from_str = request.GET.get('from')
     to_str = request.GET.get('to')
     
@@ -123,8 +158,6 @@ def index(request):
             parsed_at__lt=target_end
         ).order_by('-parsed_at')
         
-        # Page loads instantly without waiting for parsing to finish
-
         days_data.append({
             'date': target_start,
             'news_list': daily_news,
@@ -136,11 +169,6 @@ def index(request):
         for n in day['news_list']:
             _ = n.tags
 
-
-
-
-
-
     top_tags = get_top_tags()
     return render(request, 'core/index.html', {
         'days_data': days_data,
@@ -150,18 +178,10 @@ def index(request):
     })
 
 
-LENTA_SECTION_PATHS = {
-    'Политика':   ['russia', 'world', 'ussr'],
-    'Спорт':      ['sport'],
-    'Экономика':  ['economics', 'finance', 'realty', 'business'],
-    'Технологии': ['internet', 'innovation'],
-    'Культура':   ['culture', 'entertainment', 'kino', 'music'],
-    'Наука':      ['science', 'space'],
-    'Общество':   ['society', 'human_rights', 'life'],
-    'Регионы':    ['russia', 'siberia', 'ural'],
-}
-
 def _fetch_html(url):
+    """
+    Вспомогательная функция для получения HTML по URL.
+    """
     req = urllib.request.Request(
         url,
         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -172,9 +192,11 @@ def _fetch_html(url):
     except Exception:
         return ''
 
-_date_html_cache = {}
 
 def _get_date_archive_html(date_obj):
+    """
+    Получает архивный HTML для даты Lenta.ru.
+    """
     y, m, d = date_obj.year, date_obj.month, date_obj.day
     key = f'{y}-{m:02d}-{d:02d}'
     if key not in _date_html_cache:
@@ -185,7 +207,7 @@ def _get_date_archive_html(date_obj):
 
 def _parse_lenta_day_filtered(date_obj, include_labels, exclude_labels):
     """
-    Parse lenta.ru/YYYY/MM/DD/ and filter articles by included/excluded tags.
+    Парсит новости за день и фильтрует их по тегам.
     """
     y, m, d = date_obj.year, date_obj.month, date_obj.day
     html = _get_date_archive_html(date_obj)
@@ -256,13 +278,14 @@ def _parse_lenta_day_filtered(date_obj, include_labels, exclude_labels):
 
 
 def _extract_article_body(url):
-    """Fetch and extract readable text from an article URL."""
+    """
+    Извлекает текст статьи из URL.
+    """
     html = _fetch_html(url)
     if not html:
         return ''
     soup = BeautifulSoup(html, 'lxml')
     blocks = []
-
 
     body_div = soup.find('div', class_=re.compile(r'topic-body__content|article-text|b-text|content__text'))
     if body_div:
@@ -271,7 +294,6 @@ def _extract_article_body(url):
             if t:
                 blocks.append(t)
 
-
     if not blocks:
         article = soup.find('article')
         if article:
@@ -279,7 +301,6 @@ def _extract_article_body(url):
                 t = re.sub(r'\s+', ' ', p.get_text(separator=' ')).strip()
                 if len(t) > 40:
                     blocks.append(t)
-
 
     if not blocks:
         for p in soup.find_all('p'):
@@ -293,6 +314,9 @@ def _extract_article_body(url):
 
 @csrf_exempt
 def fetch_article_body(request):
+    """
+    API endpoint для получения тела статьи.
+    """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
     try:
@@ -308,6 +332,9 @@ def fetch_article_body(request):
 
 @csrf_exempt
 def fetch_category_news(request):
+    """
+    API endpoint для фильтрации новостей по тегам и датам.
+    """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
@@ -328,14 +355,17 @@ def fetch_category_news(request):
         except ValueError:
             continue
 
-        # Parse with combined inclusive/exclusive logic
         day_articles = _parse_lenta_day_filtered(date_obj, included_tags, excluded_tags)
         results[date_str] = day_articles
 
     return JsonResponse({'results': results})
 
+
 @csrf_exempt
 def get_comments(request):
+    """
+    API endpoint для получения списка комментариев к новости.
+    """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
     try:
@@ -357,8 +387,12 @@ def get_comments(request):
         })
     return JsonResponse({'comments': data})
 
+
 @csrf_exempt
 def add_comment(request):
+    """
+    API endpoint для добавления комментария.
+    """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
     if not request.user.is_authenticated:
@@ -388,55 +422,3 @@ def add_comment(request):
             'created_at': comment.created_at.strftime('%d.%m.%Y %H:%M')
         }
     })
-
-@csrf_exempt
-def send_ai_message(request):
-    """
-    Sends a message to the AI news assistant.
-    """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
-
-    try:
-        data = json.loads(request.body)
-    except Exception:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    user_message = data.get('message', '').strip()
-    if not user_message:
-        return JsonResponse({'status': 'error', 'message': 'Сообщение не может быть пустым'}, status=400)
-
-    # Get history from session
-    messages = request.session.get('ai_messages', [])
-    
-    # Limit history to avoid huge sessions
-    if len(messages) > 10:
-        messages = messages[-10:]
-
-    # Add user message
-    messages.append({'role': 'user', 'content': user_message})
-
-    # Get some recent news for context
-    recent_news = News.objects.order_by('-parsed_at')[:20]
-
-    # Get AI response
-    ai_response = ai_get_chat_response(messages, recent_news)
-
-    # Add AI response to history
-    messages.append({'role': 'assistant', 'content': ai_response})
-    
-    # Save back to session
-    request.session['ai_messages'] = messages
-
-    return JsonResponse({
-        'status': 'success',
-        'ai_response': ai_response,
-        'user_message': user_message,
-        'timestamp': timezone.localtime().strftime("%H:%M")
-    })
-
-@csrf_exempt
-def clear_ai_chat(request):
-    if 'ai_messages' in request.session:
-        del request.session['ai_messages']
-    return JsonResponse({'status': 'success'})

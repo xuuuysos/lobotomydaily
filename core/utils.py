@@ -1,6 +1,10 @@
-import re
-import os
+# pylint: disable=no-member
+"""
+Utility functions for tag parsing, cleaning, and classification.
+"""
+
 import json
+import re
 from .ai_utils import ai_classify_news
 
 def clean_and_deduplicate_tags(tags):
