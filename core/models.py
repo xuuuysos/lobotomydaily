@@ -22,7 +22,7 @@ class News(models.Model):
         return classify_news(self.title, self.body, url=self.url, news_id=self.id)
 
     class Meta:
-        managed = 'test' in sys.argv
+        managed = False
         db_table = 'news'
 
 
