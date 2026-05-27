@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/article-body/', core.views.fetch_article_body, name='fetch_article_body'),
     path('api/comments/get/', core.views.get_comments, name='get_comments'),
     path('api/comments/add/', core.views.add_comment, name='add_comment'),
+    path('api/bookmarks/toggle/', core.views.toggle_bookmark, name='toggle_bookmark'),
 ]
+

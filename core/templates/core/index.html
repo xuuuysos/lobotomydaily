@@ -848,23 +848,21 @@
                             <span class="article-meta" id="reading-meta">время дата</span>
                             <div id="reading-tags" class="tags-container" style="margin: 0; margin-top: 5px;"></div>
                         </div>
-                        <div class="article-actions">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
-                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
-                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0"
-                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2">
-                                </path>
-                                <rect x="6" y="14" width="12" height="8"></rect>
-                            </svg>
+                        <div class="article-actions" style="display: flex; gap: 15px; align-items: center; position: relative;">
+                            <button id="bookmark-btn" title="Сохранить в профиль" onclick="toggleBookmarkAction()" style="background: none; border: none; padding: 4px; display: flex; align-items: center; color: #a0a0a0; transition: color 0.2s, transform 0.1s; {% if not request.user.is_authenticated %}opacity: 0.4; cursor: not-allowed;{% else %}cursor: pointer;{% endif %}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </button>
+                            <button id="copy-btn" title="Скопировать" onclick="copyArticleAction()" style="background: none; border: none; padding: 4px; display: flex; align-items: center; color: #a0a0a0; transition: color 0.2s, transform 0.1s; {% if not request.user.is_authenticated %}opacity: 0.4; cursor: not-allowed;{% else %}cursor: pointer;{% endif %}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                            <span id="copy-toast" style="font-size: 11px; font-weight: bold; color: #2ed573; opacity: 0; transition: opacity 0.3s; pointer-events: none; position: absolute; top: -20px; right: 0; background: #fff; border: 1px solid #2ed573; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">Скопировано!</span>
                         </div>
                     </div>
 
@@ -913,6 +911,13 @@
         </main>
     </div>
     <script>
+        const isAuthenticated = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+        const userBookmarks = new Set([
+            {% for b_url in user_bookmarks_urls %}
+            "{{ b_url|escapejs }}",
+            {% endfor %}
+        ]);
+
         function toggleSidebarGroup(header) {
             header.classList.toggle('open');
             const list = header.nextElementSibling;
@@ -1126,6 +1131,9 @@
             const url = el.getAttribute('data-url');
             const tags = el.getAttribute('data-tags') || '';
 
+            currentArticleUrl = url;
+            updateBookmarkButtonUI();
+
             document.getElementById('reading-title').innerText = title;
             document.getElementById('reading-meta').innerText = time;
 
@@ -1214,6 +1222,9 @@
             const body = element.getAttribute('data-body');
             const url = element.getAttribute('data-url');
 
+            currentArticleUrl = url;
+            updateBookmarkButtonUI();
+
             document.getElementById('reading-title').innerText = title;
             document.getElementById('reading-meta').innerText = time;
 
@@ -1240,6 +1251,71 @@
         }
 
         let currentArticleUrl = null;
+
+        function updateBookmarkButtonUI() {
+            const btn = document.getElementById('bookmark-btn');
+            if (!btn) return;
+            if (!isAuthenticated) return;
+            const svg = btn.querySelector('svg');
+            if (currentArticleUrl && userBookmarks.has(currentArticleUrl)) {
+                btn.style.color = '#1a2b88';
+                svg.setAttribute('fill', '#1a2b88');
+            } else {
+                btn.style.color = '#a0a0a0';
+                svg.setAttribute('fill', 'none');
+            }
+        }
+
+        function toggleBookmarkAction() {
+            if (!isAuthenticated) {
+                alert("Только зарегистрированные пользователи могут сохранять новости в профиль.");
+                return;
+            }
+            if (!currentArticleUrl) return;
+
+            fetch('/api/bookmarks/toggle/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: currentArticleUrl })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'bookmarked') {
+                    userBookmarks.add(currentArticleUrl);
+                } else if (data.status === 'unbookmarked') {
+                    userBookmarks.delete(currentArticleUrl);
+                }
+                updateBookmarkButtonUI();
+            })
+            .catch(() => {
+                alert("Не удалось сохранить новость. Пожалуйста, попробуйте позже.");
+            });
+        }
+
+        function copyArticleAction() {
+            if (!isAuthenticated) {
+                alert("Только зарегистрированные пользователи могут копировать новости.");
+                return;
+            }
+            const title = document.getElementById('reading-title').innerText;
+            const bodyText = document.getElementById('reading-body').innerText;
+            const url = currentArticleUrl || window.location.href;
+
+            const textToCopy = `${title}\n\n${bodyText}\n\nИсточник: ${url}`;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const toast = document.getElementById('copy-toast');
+                if (toast) {
+                    toast.style.opacity = '1';
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                    }, 2000);
+                }
+            }).catch(() => {
+                alert("Не удалось скопировать новость в буфер обмена.");
+            });
+        }
 
         function loadComments(url) {
             currentArticleUrl = url;
@@ -1345,6 +1421,30 @@
                     });
                 }
             });
+
+            // Automatically select article if URL parameter 'url' is present, otherwise first article
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUrl = urlParams.get('url');
+            if (targetUrl) {
+                const decodedUrl = decodeURIComponent(targetUrl);
+                const targetItem = document.querySelector(`.list-item[data-url="${decodedUrl}"]`);
+                if (targetItem) {
+                    // Open the day widget containing this item
+                    const dayWidget = targetItem.closest('.day-widget');
+                    if (dayWidget && !dayWidget.classList.contains('open')) {
+                        toggleWidget(dayWidget.querySelector('.date-header'));
+                    }
+                    showArticle(targetItem);
+                } else {
+                    const firstItem = document.querySelector('.list-item');
+                    if (firstItem) showArticle(firstItem);
+                }
+            } else {
+                const firstItem = document.querySelector('.list-item');
+                if (firstItem) {
+                    showArticle(firstItem);
+                }
+            }
         });
     </script>
 </body>

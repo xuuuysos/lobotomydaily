@@ -43,3 +43,20 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+
+class Bookmark(models.Model):
+    """
+    Model for saving bookmarked news items for users.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    news_url = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """
+        Metadata options for the Bookmark model.
+        """
+        db_table = 'bookmarks'
+        unique_together = ('user', 'news_url')
+

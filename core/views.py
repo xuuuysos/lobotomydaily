@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from .forms import RegisterForm
-from .models import News, Comment, NewsAITags
+from .models import News, Comment, NewsAITags, Bookmark
 from .utils import classify_news, clean_and_deduplicate_tags
 
 
@@ -74,9 +74,19 @@ def profile(request):
     """
     Страница профиля пользователя.
     """
-    user = request.user
+    saved_news = []
+    if request.user.is_authenticated:
+        bookmarks = Bookmark.objects.filter(user=request.user).order_by('-created_at')
+        for b in bookmarks:
+            try:
+                news_item = News.objects.get(url=b.news_url)
+                saved_news.append(news_item)
+            except News.DoesNotExist:
+                pass
+
     context = {
-        'user': user
+        'user': request.user,
+        'saved_news': saved_news
     }
     context.update(get_general_context(request))
     return render(request, "profile.html", context)
@@ -169,12 +179,19 @@ def index(request):
         for n in day['news_list']:
             _ = n.tags
 
+    user_bookmarks_urls = []
+    if request.user.is_authenticated:
+        user_bookmarks_urls = list(
+            Bookmark.objects.filter(user=request.user).values_list('news_url', flat=True)
+        )
+
     top_tags = get_top_tags()
     return render(request, 'core/index.html', {
         'days_data': days_data,
         'top_tags': top_tags,
         'from_date': from_str,
-        'to_date': to_str
+        'to_date': to_str,
+        'user_bookmarks_urls': user_bookmarks_urls
     })
 
 
@@ -422,3 +439,33 @@ def add_comment(request):
             'created_at': comment.created_at.strftime('%d.%m.%Y %H:%M')
         }
     })
+
+
+@csrf_exempt
+def toggle_bookmark(request):
+    """
+    API endpoint для переключения закладки новости.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Not authenticated'}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    url = body.get('url', '').strip()
+    if not url:
+        return JsonResponse({'error': 'URL is required'}, status=400)
+
+    bookmark, created = Bookmark.objects.get_or_create(
+        user=request.user,
+        news_url=url
+    )
+    if not created:
+        bookmark.delete()
+        return JsonResponse({'status': 'unbookmarked'})
+    return JsonResponse({'status': 'bookmarked'})
+

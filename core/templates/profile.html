@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль — Lobotomy News</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'core/style.css' %}">
 </head>
-<body style="overflow: auto;">
+<body style="overflow: hidden; height: 100vh;">
     <div class="auth-layout">
         <!-- Sidebar -->
         <div class="auth-sidebar">
@@ -27,7 +27,7 @@
         </div>
         
         <!-- Main Area -->
-        <main class="auth-main" style="padding: 60px 80px;">
+        <main class="auth-main" style="padding: 60px 80px; overflow-y: auto; height: 100vh;">
             <div style="position: absolute; top: 40px; right: 40px; display: flex; gap: 20px; align-items: center;">
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
@@ -35,7 +35,7 @@
                 </form>
             </div>
             
-            <h1 class="profile-title">Профиль</h1>
+            <h1 class="profile-title" style="text-transform: none;">Профиль</h1>
             
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px;">
                 <!-- Left: User Card -->
@@ -50,33 +50,33 @@
                         <h2>{{ user.username }}</h2>
                     </div>
                 </div>
-                
-                <!-- Right: Buttons -->
-                <div class="profile-actions-grid" style="margin-bottom: 0; display: flex; gap: 15px; margin-left: auto;">
-                    <!-- Bookmarks Card -->
-                    <div class="profile-card" style="padding: 16px; min-height: auto; width: 64px; height: 64px;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
-                        </svg>
-                    </div>
-                    <!-- Filters Card -->
-                    <div class="profile-card" style="padding: 16px; min-height: auto; width: 64px; height: 64px;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                        </svg>
-                    </div>
-                </div>
             </div>
             
-            <div class="profile-feed-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="profile-feed-header" style="margin-bottom: 20px; display: flex; align-items: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a2b88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
                 </svg>
+                <span style="font-size: 14px; font-weight: 700; color: #1a2b88; text-transform: uppercase; letter-spacing: 0.6px; margin-left: 8px;">Сохраненные публикации</span>
             </div>
             
+            {% if saved_news %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                {% for article in saved_news %}
+                <a href="/?url={{ article.url|urlencode }}" class="profile-card" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: auto; padding: 20px; text-decoration: none; color: inherit; text-align: left; transition: all 0.2s;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 8px;">
+                        <span style="font-size: 11px; font-weight: 700; color: #1a2b88; text-transform: uppercase;">{{ article.source }}</span>
+                        <span style="font-size: 11px; color: #a0a0a0;">{{ article.parsed_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #111; margin-bottom: 6px; font-family: 'Inter', sans-serif; line-height: 1.4; letter-spacing: -0.2px;">{{ article.title }}</h3>
+                    <p style="font-size: 13px; color: #555; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0;">{{ article.body|default:"" }}</p>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
             <div style="color: #bbb; font-size: 14px; font-style: italic;">
                 Вы еще ничего не сохранили.
             </div>
+            {% endif %}
         </main>
     </div>
 </body>
