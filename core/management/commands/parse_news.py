@@ -1,4 +1,4 @@
-# pylint: disable=no-member,too-many-locals,too-many-statements
+# pylint: disable=no-member,too-many-locals,too-many-statements,cyclic-import
 """
 Django management command to parse news from various sources (Lenta.ru, Fontanka.ru, RIA.ru)
 and store them in the database with AI-processed tags, refined titles, and bodies.
@@ -73,9 +73,24 @@ class Command(BaseCommand):
 
         def fetch_links_for_day(day_offset):
             target_date = start_point - datetime.timedelta(days=day_offset)
-            lenta = self.get_lenta_links(target_date, ru_months)
-            fontanka = self.get_fontanka_links(target_date)
-            ria = self.get_ria_links(target_date)
+            
+            lenta = []
+            try:
+                lenta = self.get_lenta_links(target_date, ru_months)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error fetching Lenta news for {target_date}: {e}"))
+
+            fontanka = []
+            try:
+                fontanka = self.get_fontanka_links(target_date)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error fetching Fontanka news for {target_date}: {e}"))
+
+            ria = []
+            try:
+                ria = self.get_ria_links(target_date)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error fetching RIA news for {target_date}: {e}"))
 
             day_links = []
             max_len = max(len(lenta), len(fontanka), len(ria))
@@ -162,18 +177,23 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Successfully processed news. Total new items: {created_total}")
         )
 
-    def fetch_html(self, url):
+    def fetch_html(self, url, retries=3):
         """
-        Helper method to perform requests and get HTML content.
+        Helper method to perform requests and get HTML content with retries.
         """
+        import time
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         req = urllib.request.Request(url, headers=headers)
-        try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                return response.read().decode('utf-8', errors='ignore')
-        # pylint: disable=broad-exception-caught
-        except Exception:
-            return ""
+        for attempt in range(retries):
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    return response.read().decode('utf-8', errors='ignore')
+            # pylint: disable=broad-exception-caught
+            except Exception as e:
+                if attempt == retries - 1:
+                    self.stdout.write(self.style.WARNING(f"Failed to fetch {url} after {retries} attempts: {e}"))
+                time.sleep(1)
+        return ""
 
     def extract_text_from_url(self, url):
         """

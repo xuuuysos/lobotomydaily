@@ -3,12 +3,14 @@
 Database models for the core application of Lobotomy Daily.
 """
 
-import sys
 from django.db import models
 from django.contrib.auth.models import User
 
 
 class News(models.Model):
+    """
+    Model representing a parsed news article.
+    """
     id = models.BigAutoField(primary_key=True)
     source = models.CharField(max_length=50)
     title = models.CharField(max_length=255)
@@ -18,30 +20,49 @@ class News(models.Model):
 
     @property
     def tags(self):
+        """
+        Retrieves dynamically generated or cached AI tags for the article.
+        """
+        # pylint: disable=import-outside-toplevel
         from .utils import classify_news
         return classify_news(self.title, self.body, url=self.url, news_id=self.id)
 
     class Meta:
+        """
+        Meta options for the News model.
+        """
         managed = False
         db_table = 'news'
 
 
 class NewsAITags(models.Model):
+    """
+    Model to cache generated AI tags for news articles.
+    """
     news_url = models.URLField(unique=True)
     tags_json = models.TextField()  # Stores JSON list of tags
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """
+        Meta options for the NewsAITags model.
+        """
         db_table = 'news_ai_tags'
 
 
 class Comment(models.Model):
+    """
+    Model representing a comment left by a user on a news article.
+    """
     news_url = models.URLField(db_index=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """
+        Meta options for the Comment model.
+        """
         ordering = ['created_at']
 
 

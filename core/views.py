@@ -11,6 +11,9 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 from django.contrib.auth import login
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+from django.utils.html import strip_tags
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -185,13 +188,16 @@ def index(request):
             Bookmark.objects.filter(user=request.user).values_list('news_url', flat=True)
         )
 
+    from core.apps import CoreConfig
     top_tags = get_top_tags()
     return render(request, 'core/index.html', {
         'days_data': days_data,
         'top_tags': top_tags,
         'from_date': from_str,
         'to_date': to_str,
-        'user_bookmarks_urls': user_bookmarks_urls
+        'user_bookmarks_urls': user_bookmarks_urls,
+        'update_status': CoreConfig.last_update_status,
+        'update_time': CoreConfig.last_update_time
     })
 
 
@@ -329,6 +335,20 @@ def _extract_article_body(url):
     return full or ''
 
 
+def _is_valid_url(url):
+    """
+    Валидирует URL с помощью URLValidator.
+    """
+    if not url:
+        return False
+    validator = URLValidator()
+    try:
+        validator(url)
+        return True
+    except ValidationError:
+        return False
+
+
 @csrf_exempt
 def fetch_article_body(request):
     """
@@ -341,8 +361,8 @@ def fetch_article_body(request):
     except Exception:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     url = body.get('url', '').strip()
-    if not url:
-        return JsonResponse({'error': 'No URL'}, status=400)
+    if not url or not _is_valid_url(url):
+        return JsonResponse({'error': 'Invalid URL'}, status=400)
     text = _extract_article_body(url)
     return JsonResponse({'body': text})
 
@@ -391,8 +411,8 @@ def get_comments(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     
     url = body.get('url', '').strip()
-    if not url:
-        return JsonResponse({'error': 'No URL provided'}, status=400)
+    if not url or not _is_valid_url(url):
+        return JsonResponse({'error': 'Invalid URL'}, status=400)
 
     comments = Comment.objects.filter(news_url=url).select_related('author')
     data = []
@@ -423,8 +443,13 @@ def add_comment(request):
     url = body.get('url', '').strip()
     text = body.get('text', '').strip()
     
-    if not url or not text:
-        return JsonResponse({'error': 'URL and text are required'}, status=400)
+    if not url or not text or not _is_valid_url(url):
+        return JsonResponse({'error': 'URL and text are required, and URL must be valid'}, status=400)
+
+    # Защита от "плохого" HTML в тексте комментария (санитизация)
+    text = strip_tags(text)
+    if not text:
+        return JsonResponse({'error': 'Comment text cannot be empty after sanitization'}, status=400)
 
     comment = Comment.objects.create(
         news_url=url,
@@ -457,8 +482,8 @@ def toggle_bookmark(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     url = body.get('url', '').strip()
-    if not url:
-        return JsonResponse({'error': 'URL is required'}, status=400)
+    if not url or not _is_valid_url(url):
+        return JsonResponse({'error': 'Invalid URL'}, status=400)
 
     bookmark, created = Bookmark.objects.get_or_create(
         user=request.user,

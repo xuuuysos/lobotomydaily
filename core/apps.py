@@ -14,6 +14,8 @@ class CoreConfig(AppConfig):
     Configuration class for the core Django application.
     """
     name = 'core'
+    last_update_status = "Готово"
+    last_update_time = "Недавно"
 
     def ready(self):
         # Only run background scheduler in Django's main process,
@@ -26,17 +28,23 @@ class CoreConfig(AppConfig):
         Periodically runs the news parser command in a separate thread.
         """
         from django.core.management import call_command
+        from django.utils import timezone
 
         # Sleep for 5 seconds to let the server boot up completely
         time.sleep(5)
 
         while True:
             try:
+                CoreConfig.last_update_status = "Обновление..."
                 print("\n[Scheduler] Starting scheduled background news parsing...")
                 # Pre-fetch news for the last 7 days to keep feed fresh
                 call_command('parse_news', days=7, limit=5, clear=False)
+                CoreConfig.last_update_status = "Успешно"
+                CoreConfig.last_update_time = timezone.localtime().strftime('%d.%m.%Y %H:%M')
                 print("[Scheduler] Scheduled background news parsing completed successfully.\n")
             except Exception as e:
+                CoreConfig.last_update_status = "Ошибка"
+                CoreConfig.last_update_time = timezone.localtime().strftime('%d.%m.%Y %H:%M')
                 print(f"\n[Scheduler] Error during scheduled news parsing: {e}\n")
 
             # Sleep for 30 minutes

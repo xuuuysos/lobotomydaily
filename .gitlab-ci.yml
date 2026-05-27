@@ -1,6 +1,7 @@
 stages:
   - linter
   - tests
+  - docs
 
 pylint-job:
   stage: linter
@@ -24,3 +25,19 @@ tests-job:
   script:
     - coverage run --source='.' manage.py test
     - coverage report
+
+docs-job:
+  stage: docs
+  before_script:
+    - python3 -V
+    - echo "Setting up environment for pdoc..."
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
+  script:
+    - export DJANGO_SETTINGS_MODULE=init.settings
+    - pdoc --output-directory docs core
+  artifacts:
+    paths:
+      - docs/
+    expire_in: 1 week

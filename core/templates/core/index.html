@@ -729,6 +729,27 @@
                 </div>
             </div>
 
+            <div class="sidebar-group" style="margin-top: 10px;">
+                <div class="group-header open" onclick="toggleSidebarGroup(this)">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="6 9 12 15 18 9"></polygon>
+                    </svg>
+                    <span>ОБНОВЛЕНИЕ ЛЕНТЫ</span>
+                </div>
+                <div class="period-controls open" style="padding: 0 25px 15px; font-size: 11px; color: rgba(255,255,255,0.7); display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700; text-transform: uppercase;">Статус</span>
+                        <span style="font-weight: 700; color: {% if update_status == 'Ошибка' %}#ff4d4d{% elif update_status == 'Обновление...' %}#eccc68{% else %}#2ed573{% endif %}; display: flex; align-items: center; gap: 4px;">
+                            {{ update_status|default:"Готово" }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700; text-transform: uppercase;">Обновлено</span>
+                        <span style="font-weight: 500; color: #fff;">{{ update_time|default:"Недавно" }}</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="sidebar-group" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
                 <div class="group-header open" onclick="toggleSidebarGroup(this)">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
