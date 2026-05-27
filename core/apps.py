@@ -8,21 +8,28 @@ import time
 from django.apps import AppConfig
 
 
+# pylint: disable=import-outside-toplevel,broad-exception-caught
 class CoreConfig(AppConfig):
+    """
+    Configuration class for the core Django application.
+    """
     name = 'core'
 
     def ready(self):
-        # Only run background scheduler in Django's main process, avoiding duplicate threads in dev mode (reloader)
+        # Only run background scheduler in Django's main process,
+        # avoiding duplicate threads in dev mode (reloader)
         if os.environ.get('RUN_MAIN') == 'true':
             threading.Thread(target=self.start_background_scheduler, daemon=True).start()
 
     def start_background_scheduler(self):
-        # Delay imports until apps are fully loaded
+        """
+        Periodically runs the news parser command in a separate thread.
+        """
         from django.core.management import call_command
-        
+
         # Sleep for 5 seconds to let the server boot up completely
         time.sleep(5)
-        
+
         while True:
             try:
                 print("\n[Scheduler] Starting scheduled background news parsing...")
@@ -30,7 +37,7 @@ class CoreConfig(AppConfig):
                 call_command('parse_news', days=7, limit=5, clear=False)
                 print("[Scheduler] Scheduled background news parsing completed successfully.\n")
             except Exception as e:
-                print(f"\n[Scheduler] Error during scheduled background news parsing: {e}\n")
-            
+                print(f"\n[Scheduler] Error during scheduled news parsing: {e}\n")
+
             # Sleep for 30 minutes
             time.sleep(1800)
