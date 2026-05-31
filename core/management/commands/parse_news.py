@@ -1,4 +1,3 @@
-# pylint: disable=no-member,too-many-locals,too-many-statements,cyclic-import
 """
 Django management command to parse news from various sources (Lenta.ru, Fontanka.ru, RIA.ru)
 and store them in the database with AI-processed tags, refined titles, and bodies.
@@ -68,12 +67,12 @@ class Command(BaseCommand):
             'июля': 7, 'августа': 8, 'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
         }
 
-        # 1. Fetch links for all days in parallel!
-        all_selected_links = []
-
+        # 1. Fetch links for all days in parallel
+        # Возвращаем ВСЕ найденные ссылки за день (без обрезки до limit)
+        # чтобы был запас для замены неудачных статей
         def fetch_links_for_day(day_offset):
             target_date = start_point - datetime.timedelta(days=day_offset)
-            
+
             lenta = []
             try:
                 lenta = self.get_lenta_links(target_date, ru_months)
@@ -109,42 +108,99 @@ class Command(BaseCommand):
                     seen.add(d['url'])
                     unique_links.append(d)
 
-            return target_date, unique_links[:limit]
+            # Возвращаем все ссылки без [:limit] — обрезка происходит
+            # позже в цикле while, по мере обработки с заменами
+            return target_date, unique_links
 
         self.stdout.write("Fetching all daily index pages in parallel...")
+
+        # day_results: { target_date: [все_ссылки_за_день] }
         day_results = {}
         with ThreadPoolExecutor(max_workers=max(1, days)) as executor:
             futures = {executor.submit(fetch_links_for_day, i): i for i in range(days)}
             for future in as_completed(futures):
-                target_date, selected = future.result()
-                day_results[target_date] = selected
-                all_selected_links.extend(selected)
+                target_date, all_links = future.result()
+                day_results[target_date] = all_links
 
-        # 2. Process all articles across all days in parallel!
-        self.stdout.write(f"Processing all {len(all_selected_links)} articles in parallel...")
-
+        # 2. Обрабатываем статьи по дням с заменой неудачных
+        # Если текст статьи не удалось извлечь — берём следующую из запаса
+        # до тех пор пока не наберём нужное количество или не кончатся ссылки
         def process_single_item(item):
+            """
+            Скачивает и AI-обрабатывает одну статью.
+            Возвращает None в полях результата если текст не удалось извлечь.
+            """
             body = self.extract_text_from_url(item['url'])
+
+            # Считаем статью неудачной если текст пустой или это заглушка
+            if not body or body == "Текст статьи недоступен. Пожалуйста, посетите сайт источника.":
+                return item, None, None, None
+
             self.stdout.write(f"  AI is processing: {item['title'][:50]}...")
             refined_title, refined_body, ai_tags = ai_process_article(item['title'], body)
             return item, refined_title, refined_body, ai_tags
 
+        self.stdout.write("Processing articles with fallback replacements...")
         processed_results = []
-        with ThreadPoolExecutor(max_workers=15) as executor:
-            futures = {
-                executor.submit(process_single_item, item): item
-                for item in all_selected_links
-            }
-            for future in as_completed(futures):
-                try:
-                    res = future.result()
-                    processed_results.append(res)
-                # pylint: disable=broad-exception-caught
-                except Exception as e:
-                    item = futures[future]
-                    self.stdout.write(
-                        self.style.ERROR(f"Failed processing network/AI for {item['url']}: {e}")
+
+        for target_date, all_links in day_results.items():
+            collected = []  # успешно обработанные статьи за этот день
+            index = 0  # указатель на следующую необработанную ссылку в all_links
+
+            while len(collected) < limit and index < len(all_links):
+                # Берём ровно столько ссылок сколько ещё не хватает до limit
+                needed = limit - len(collected)
+                batch = all_links[index: index + needed]
+                index += needed
+
+                if not batch:
+                    break
+
+                self.stdout.write(
+                    f"  [{target_date.date()}] Processing batch of {len(batch)}, "
+                    f"collected {len(collected)}/{limit}..."
+                )
+
+                # Обрабатываем текущий батч параллельно
+                batch_results = []
+                with ThreadPoolExecutor(max_workers=len(batch)) as executor:
+                    futures = {
+                        executor.submit(process_single_item, item): item
+                        for item in batch
+                    }
+                    for future in as_completed(futures):
+                        try:
+                            res = future.result()
+                            batch_results.append(res)
+                        # pylint: disable=broad-exception-caught
+                        except Exception as e:
+                            item = futures[future]
+                            self.stdout.write(
+                                self.style.ERROR(f"Failed processing {item['url']}: {e}")
+                            )
+
+                # Отбираем успешные; неудачные логируем — следующая итерация while
+                # автоматически добирает замены из оставшихся ссылок
+                for res in batch_results:
+                    item, refined_title, refined_body, ai_tags = res
+                    if refined_title is None:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"  No text extracted, replacing: {item['url']}"
+                            )
+                        )
+                    else:
+                        collected.append(res)
+
+            if len(collected) < limit:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"  [{target_date.date()}] Could only collect "
+                        f"{len(collected)}/{limit} — ran out of available links"
                     )
+                )
+
+            processed_results.extend(collected)
 
         # 3. Save sequentially in the main thread to avoid SQLite locks
         self.stdout.write("Saving all parsed news to the database...")
@@ -160,7 +216,6 @@ class Command(BaseCommand):
                     }
                 )
 
-                # Save AI tags immediately to our new table
                 if ai_tags:
                     NewsAITags.objects.update_or_create(
                         news_url=item['url'],
@@ -205,7 +260,6 @@ class Command(BaseCommand):
         soup = BeautifulSoup(html, 'lxml')
 
         text_blocks = []
-        # Lenta/Fontanka/RIA common logic
         body_div = soup.find(
             'div',
             class_=re.compile(
